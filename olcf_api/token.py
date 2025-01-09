@@ -31,5 +31,5 @@ class TokenService:
         if response:
             return True
         else:
-            print(f'DEL {cluster_url} failed - {response.status_code}')
+            print(f'DEL {revoke_url} failed - {response.status_code}')
             return False
