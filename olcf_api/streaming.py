@@ -95,7 +95,7 @@ class StreamingService:
             print(f'INFO: {self._service_name} Cluster Shutdown\n{shutdown_details}')
             return True
         else:
-            print(f'DEL {cluster_url} failed - {response.status_code}')
+            print(f'DELETE {cluster_url} failed - {response.status_code}')
             return False
 
     def list_clusters(self) -> bool:
