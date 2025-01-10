@@ -5,37 +5,46 @@ import argparse
 from os import getenv
 
 from olcf_api.client import OLCFAPIClient
-from olcf_api.token import TokenService
 from olcf_api.streaming import StreamingService
 
 def list_services(service : StreamingService):
     print('++++ OLCF S3M - Streaming Service Orchestration ++++ Listing Available Services')
-    service.list_services()
+    success, msg = service.list_services()
+    if success:
+        print(msg)
     print('\n\n')
 
 def show(service : StreamingService):
     print(f'++++ OLCF S3M - Streaming Service Orchestration ++++ Showing Existing Deployments')
-    service.list_clusters()
+    success, msg = service.list_clusters()
+    if success:
+        print(msg)
     print('\n\n')
 
 def deploy(service : StreamingService, cluster : str):
     print('++++ OLCF S3M - Streaming Service Orchestration ++++ Deploying a 1-node Service')
-    success = service.start_cluster(cluster_name=cluster)
+    success, msg = service.start_cluster(cluster_name=cluster)
     if success:
-        print('\n\n')
+        print(f'{msg}\n\n')
 
         print('++++ OLCF S3M - Streaming Service Orchestration ++++ Getting Cluster Information')
-        service.get_cluster_info(cluster_name=cluster)
-        print('\n\n')
+        success, msg = service.get_cluster_info(cluster_name=cluster)
+        if success:
+            print(msg)
+    print('\n\n')
 
 def info(service : StreamingService, cluster : str):
     print('++++ OLCF S3M - Streaming Service Orchestration ++++ Getting Cluster Information')
-    service.get_cluster_info(cluster_name=cluster)
+    success, msg = service.get_cluster_info(cluster_name=cluster)
+    if success:
+        print(msg)
     print('\n\n')
 
 def shutdown(service : StreamingService, cluster : str):
     print('++++ OLCF S3M - Streaming Service Orchestration ++++ Shutting Down Service')
-    service.stop_cluster(cluster_name=cluster)
+    success, msg = service.stop_cluster(cluster_name=cluster)
+    if success:
+        print(msg)
     print('\n\n')
 
 
@@ -59,7 +68,7 @@ def main(args):
         show(my_strm_service)
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser('smc24-streaming-demo')
+    parser = argparse.ArgumentParser('olcf-s3m-streaming')
     parser.add_argument('-a', '--avail', help='list available streaming services', action='store_true')
     parser.add_argument('-d', '--deploy', help='deploy a service cluster', action='store_true')
     parser.add_argument('-i', '--info', help='get information about a service cluster', action='store_true')
