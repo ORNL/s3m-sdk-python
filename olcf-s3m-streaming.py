@@ -21,16 +21,16 @@ def show(service : StreamingService):
         print(msg)
     print('\n\n')
 
-def deploy(service : StreamingService, cluster : str):
-    print('++++ OLCF S3M - Streaming Service Orchestration ++++ Deploying a 1-node Service')
-    success, msg = service.start_cluster(cluster_name=cluster)
+def deploy(service : StreamingService, cluster : str, nodes : int = 1):
+    print(f'++++ OLCF S3M - Streaming Service Orchestration ++++ Deploying a {nodes}-node Service')
+    success, msg = service.start_cluster(cluster_name=cluster, wait_for_healthy=True, node_count=nodes)
     if success:
         print(f'{msg}\n\n')
 
-        print('++++ OLCF S3M - Streaming Service Orchestration ++++ Getting Cluster Information')
-        success, msg = service.get_cluster_info(cluster_name=cluster)
-        if success:
-            print(msg)
+        print('++++ OLCF S3M - Streaming Service Orchestration ++++ Getting Cluster Deployment')
+        deployment = service.get_cluster_deployment(cluster_name=cluster)
+        if deployment:
+            print(deployment)
     print('\n\n')
 
 def info(service : StreamingService, cluster : str):

@@ -1,9 +1,21 @@
 import json
 import requests
+import time
 
-from typing import List, Tuple
+from dataclasses import dataclass
+from typing import Dict, List, Tuple, Union
 
 from .client import OLCFAPIClient
+
+@dataclass
+class StreamingServiceDeployment:
+    service_name      : str
+    service_ports     : Dict[str, int]
+    cluster_name      : str
+    cluster_hosts     : List[str]
+    cluster_resources : Dict[str, str]
+    auth_user         : str
+    auth_pass         : str
 
 class StreamingService:
 
@@ -22,8 +34,7 @@ class StreamingService:
         if response:
             service_list = response.json()
             services = json.dumps(service_list["backends"], indent=4)
-            services_info = f'INFO: Available Streaming Services\n{services}'
-            return True, services_info
+            return True, services
         else:
             error = f'GET from {list_url} failed - {response.status_code}'
             print(f'ERROR: {error}')
@@ -31,6 +42,7 @@ class StreamingService:
 
     def start_cluster(self,
                       cluster_name : str,
+                      wait_for_healthy : bool = False,
                       node_count : int = 1,
                       cpu_count : int = 4,
                       ram_gib : int = 4) -> Tuple[bool, str]:
@@ -47,9 +59,9 @@ class StreamingService:
     "name": "{cluster}",
     "resourceSettings": [
         {{
-            "nodes": {nodes},
+            "ram_gbs": {ram},
             "cpus": {cpus},
-            "ram_gbs": {ram}
+            "nodes": {nodes}
         }}
     ]
 }}'''
@@ -62,19 +74,33 @@ class StreamingService:
         provision_request = provision_request_str.encode()
         
         response = requests.post(url=provision_url, data=provision_request,
-                                 headers={"Authorization": f'{self._client.api_token}'})
+                                 headers={"Authorization": f'{self._client.api_token}', "Content-Type": "application/json"})
         if response:
             provision_details = json.dumps(response.json(), indent=4)
             #print(f'DEBUG: provision response\n{provision_details}')
             self._cluster_name = cluster_name
             self._cluster_provisioned = True
+
+            if wait_for_healthy:
+                self._cluster_healthy = False
+                while not self._cluster_healthy:
+                    rc, info = self.get_cluster_info(cluster_name)
+                    if rc:
+                        cluster_info = json.loads(info)
+                        if cluster_info["healthStatus"] == "healthy":
+                            self._cluster_healthy = True
+                        else:
+                            time.sleep(2)
+                    else:
+                        break
+
             return True, provision_details
         else:
             error = f'POST to {provision_url} failed - {response.status_code}'
             print(f'ERROR: {error}')
             return False, error
 
-    def get_cluster_info(self, cluster_name : str) -> bool:
+    def get_cluster_info(self, cluster_name : str) -> Tuple[bool, str]:
         cluster_url = f'{self._service_url}/cluster/{cluster_name}'
         
         response = requests.get(url=cluster_url,
@@ -83,12 +109,38 @@ class StreamingService:
             cluster_response = response.json()
             self._cluster_info = json.dumps(cluster_response["cluster"], indent=4)
             self._cluster_name = cluster_name
-            cluster_info = f'INFO: {self._service_name} Cluster Deployment\n{self._cluster_info}'
-            return True, cluster_info
+            return True, self._cluster_info
         else:
             error = f'GET from {cluster_url} failed - {response.status_code}'
             print(f'ERROR: {error}')
             return False, error
+
+    def get_cluster_deployment(self, cluster_name : str) -> Union[StreamingServiceDeployment, None]:
+        cluster_url = f'{self._service_url}/cluster/{cluster_name}'
+        
+        response = requests.get(url=cluster_url,
+                                headers={"Authorization": f'{self._client.api_token}'})
+        if response:
+            cluster_response = response.json()
+            self._cluster_info = json.dumps(cluster_response["cluster"], indent=4)
+            endpoints_key = "brokerEndpoints" if self._service_name == "rabbitmq" else "endpoints"
+            endpoints = cluster_response["cluster"][endpoints_key]
+            hosts = endpoints["addresses"]
+            ports = endpoints["ports"]
+            user = cluster_response["cluster"]["username"]
+            passwd = cluster_response["cluster"]["password"]
+            self._deployment = StreamingServiceDeployment(service_name=self._service_name,
+                                                          service_ports=ports,
+                                                          cluster_name=cluster_name,
+                                                          cluster_hosts=hosts,
+                                                          cluster_resources=dict(),
+                                                          auth_user=user, auth_pass=passwd)
+            
+            return self._deployment
+        else:
+            error = f'GET from {cluster_url} failed - {response.status_code}'
+            print(f'ERROR: {error}')
+            return None
 
     def stop_cluster(self, cluster_name : str) -> Tuple[bool, str]:
         cluster_url = f'{self._service_url}/cluster/{cluster_name}'
@@ -112,8 +164,7 @@ class StreamingService:
         if response:
             cluster_list = response.json()
             clusters = json.dumps(cluster_list["clusters"], indent=4)
-            clusters_info = f'INFO: Existing {self._service_name} Clusters\n{clusters}'
-            return True, clusters_info
+            return True, clusters
         else:
             error = f'GET from {list_url} failed - {response.status_code}'
             print(f'ERROR: {error}')
