@@ -1,6 +1,8 @@
 import json
 import requests
 
+from typing import List, Tuple
+
 from .client import OLCFAPIClient
 
 class StreamingService:
@@ -12,7 +14,7 @@ class StreamingService:
         self._cluster_name = "unknown"
         self._cluster_provisioned = False
 
-    def list_services(self):
+    def list_services(self) -> Tuple[bool, str]:
         list_url = f'{self._client.base_url}/v1alpha/streaming/list_backends'
 
         response = requests.get(url=list_url,
@@ -20,17 +22,18 @@ class StreamingService:
         if response:
             service_list = response.json()
             services = json.dumps(service_list["backends"], indent=4)
-            print(f'INFO: Available Streaming Services\n{services}')
-            return True
+            services_info = f'INFO: Available Streaming Services\n{services}'
+            return True, services_info
         else:
-            print(f'GET from {list_url} failed - {response.status_code}')
-            return False
+            error = f'GET from {list_url} failed - {response.status_code}'
+            print(f'ERROR: {error}')
+            return False, error
 
     def start_cluster(self,
                       cluster_name : str,
                       node_count : int = 1,
                       cpu_count : int = 4,
-                      ram_gib : int = 4) -> bool:
+                      ram_gib : int = 4) -> Tuple[bool, str]:
         
         cluster_kind = "general"
         if self._service_name == "redis":
@@ -65,10 +68,11 @@ class StreamingService:
             #print(f'DEBUG: provision response\n{provision_details}')
             self._cluster_name = cluster_name
             self._cluster_provisioned = True
-            return True
+            return True, provision_details
         else:
-            print(f'POST to {provision_url} failed - {response.status_code}')
-            return False
+            error = f'POST to {provision_url} failed - {response.status_code}'
+            print(f'ERROR: {error}')
+            return False, error
 
     def get_cluster_info(self, cluster_name : str) -> bool:
         cluster_url = f'{self._service_url}/cluster/{cluster_name}'
@@ -76,29 +80,31 @@ class StreamingService:
         response = requests.get(url=cluster_url,
                                 headers={"Authorization": f'{self._client.api_token}'})
         if response:
-            cluster_info = response.json()
-            self._cluster_info = json.dumps(cluster_info["cluster"], indent=4)
-            print(f'INFO: {self._service_name} Cluster Deployment\n{self._cluster_info}')
+            cluster_response = response.json()
+            self._cluster_info = json.dumps(cluster_response["cluster"], indent=4)
             self._cluster_name = cluster_name
-            return True
+            cluster_info = f'INFO: {self._service_name} Cluster Deployment\n{self._cluster_info}'
+            return True, cluster_info
         else:
-            print(f'GET from {cluster_url} failed - {response.status_code}')
-            return False
+            error = f'GET from {cluster_url} failed - {response.status_code}'
+            print(f'ERROR: {error}')
+            return False, error
 
-    def stop_cluster(self, cluster_name : str) -> bool:
+    def stop_cluster(self, cluster_name : str) -> Tuple[bool, str]:
         cluster_url = f'{self._service_url}/cluster/{cluster_name}'
 
         response = requests.delete(url=cluster_url,
                                    headers={"Authorization": f'{self._client.api_token}'})
         if response:
             shutdown_details = json.dumps(response.json(), indent=4)
-            print(f'INFO: {self._service_name} Cluster Shutdown\n{shutdown_details}')
-            return True
+            shutdown_info = f'INFO: {self._service_name} Cluster Shutdown\n{shutdown_details}'
+            return True, shutdown_info
         else:
-            print(f'DELETE {cluster_url} failed - {response.status_code}')
-            return False
+            error = f'DELETE {cluster_url} failed - {response.status_code}'
+            print(f'ERROR: {error}')
+            return False, error
 
-    def list_clusters(self) -> bool:
+    def list_clusters(self) -> Tuple[bool, str]:
         list_url = f'{self._service_url}/list_clusters'
 
         response = requests.get(url=list_url,
@@ -106,8 +112,9 @@ class StreamingService:
         if response:
             cluster_list = response.json()
             clusters = json.dumps(cluster_list["clusters"], indent=4)
-            print(f'INFO: Existing {self._service_name} Clusters\n{clusters}')
-            return True
+            clusters_info = f'INFO: Existing {self._service_name} Clusters\n{clusters}'
+            return True, clusters_info
         else:
-            print(f'GET from {list_url} failed - {response.status_code}')
-            return False
+            error = f'GET from {list_url} failed - {response.status_code}'
+            print(f'ERROR: {error}')
+            return False, error
