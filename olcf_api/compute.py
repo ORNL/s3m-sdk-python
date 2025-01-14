@@ -12,7 +12,7 @@ class ComputeService:
         self._cluster_name = cluster_name
         self._service_url = f'{api_client.base_url}/slurm/v0.0.42/{cluster_name}'
 
-    def get_status(self) -> Tuple[bool, str]:
+    def get_system_status(self) -> Tuple[bool, str]:
         status_url = f'{self._client.base_url}/v1alpha/status/{self._cluster_name}'
 
         response = requests.get(url=status_url)
@@ -23,6 +23,26 @@ class ComputeService:
             error = f'GET from {status_url} failed - {response.status_code}'
             print(f'ERROR: {error}')
             return False, error
+        
+    def get_queue_status(self, queue_name : str) -> Tuple[bool, str]:
+        status_url = f'{self._service_url}/partitions'
+
+        response = requests.get(url=status_url,
+                                headers={"Authorization": f'{self._client.api_token}'})
+        if response:
+            list_response = response.json()
+            partitions = list_response["partitions"]
+            qstatus = "UNKNOWN"
+            for part in partitions:
+                if json.dumps(part["name"]) == queue_name:
+                    qstatus = json.dumps(part["partition"]["state"])
+                    break
+            
+            return True, qstatus
+        else:
+            error = f'GET from {list_url} failed - {response.status_code}'
+            print(f'ERROR: {error}')
+            return False, error
 
     def list_jobs(self) -> Tuple[bool, str]:
         list_url = f'{self._service_url}/jobs'
@@ -30,15 +50,35 @@ class ComputeService:
         response = requests.get(url=list_url,
                                 headers={"Authorization": f'{self._client.api_token}'})
         if response:
-            job_list = response.json()
-            jobs = json.dumps(job_list["jobs"], indent=4)
-            print(f'INFO: Slurm Jobs on {self._cluster_name}\n{jobs}')
+            list_response = response.json()
+            job_list = list_response["jobs"]
+            jobs = json.dumps(job_list, indent=4)
+            print(f'DEBUG: Slurm Jobs on {self._cluster_name}\n{jobs}')
             return True, jobs
         else:
             error = f'GET from {list_url} failed - {response.status_code}'
             print(f'ERROR: {error}')
             return False, error
 
+    def list_queues(self) -> Tuple[bool, str]:
+        list_url = f'{self._service_url}/partitions'
+
+        response = requests.get(url=list_url,
+                                headers={"Authorization": f'{self._client.api_token}'})
+        if response:
+            list_response = response.json()
+            partitions = list_response["partitions"]
+            names : str = ""
+            for part in partitions:
+                part_name = json.dumps(part["name"])
+                names += f'{part_name} '
+            print(f'DEBUG: Slurm Queues on {self._cluster_name}\n{names}')
+            return True, names
+        else:
+            error = f'GET from {list_url} failed - {response.status_code}'
+            print(f'ERROR: {error}')
+            return False, error
+    
     def submit_job(self,
                    project : str,
                    workdir : str,
@@ -97,16 +137,44 @@ class ComputeService:
             print(f'ERROR: {error}')
             return False, error
 
-    def get_job_info(self, jobid : str) -> Tuple[bool, str]:
-        cluster_url = f'{self._service_url}/job/{jobid}'
+    def cancel_job(self, jobid : str) -> Tuple[bool, str]:
+        job_url = f'{self._service_url}/job/{jobid}'
         
-        response = requests.get(url=cluster_url,
+        response = requests.delete(url=job_url,
+                                   headers={"Authorization": f'{self._client.api_token}'})
+        if response:
+            return True, ""
+        else:
+            error = f'DELETE {job_url} failed - {response.status_code}'
+            print(f'ERROR: {error}')
+            return False, error
+
+    def get_job_info(self, jobid : str) -> Tuple[bool, str]:
+        job_url = f'{self._service_url}/job/{jobid}'
+        
+        response = requests.get(url=job_url,
                                 headers={"Authorization": f'{self._client.api_token}'})
         if response:
-            job_info = response.json()
-            info = json.dumps(job_info["jobs"], indent=4)
+            job_response = response.json()
+            job_info = job_response["jobs"][0]
+            info = json.dumps(job_info, indent=4)
             return True, info
         else:
-            error = f'GET from {cluster_url} failed - {response.status_code}'
+            error = f'GET from {job_url} failed - {response.status_code}'
+            print(f'ERROR: {error}')
+            return False, error
+        
+    def get_job_status(self, jobid : str) -> Tuple[bool, str]:
+        job_url = f'{self._service_url}/job/{jobid}'
+        
+        response = requests.get(url=job_url,
+                                headers={"Authorization": f'{self._client.api_token}'})
+        if response:
+            job_response = response.json()
+            job_info = job_response["jobs"][0]
+            status = json.dumps(job_info["state"]["current"])
+            return True, status
+        else:
+            error = f'GET from {job_url} failed - {response.status_code}'
             print(f'ERROR: {error}')
             return False, error
