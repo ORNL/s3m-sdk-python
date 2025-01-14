@@ -9,7 +9,7 @@ class TokenService:
 
     def __init__(self, api_client : OLCFAPIClient):
         self._client = api_client
-        self._service_url = f'{api_client.base_url}/v1/token'
+        self._service_url = f'{api_client.base_url}/olcf/v1/token'
 
     def get_token_hash(self) -> str:
         return self._client.api_token

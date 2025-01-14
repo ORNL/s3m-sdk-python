@@ -22,12 +22,12 @@ class StreamingService:
     def __init__(self, service_name : str, api_client : OLCFAPIClient):
         self._client = api_client
         self._service_name = service_name
-        self._service_url = f'{api_client.base_url}/v1alpha/streaming/{service_name}'
+        self._service_url = f'{api_client.base_url}/olcf/v1alpha/streaming/{service_name}'
         self._cluster_name = "unknown"
         self._cluster_provisioned = False
 
     def list_services(self) -> Tuple[bool, str]:
-        list_url = f'{self._client.base_url}/v1alpha/streaming/list_backends'
+        list_url = f'{self._client.base_url}/olcf/v1alpha/streaming/list_backends'
 
         response = requests.get(url=list_url,
                                 headers={"Authorization": f'{self._client.api_token}'})

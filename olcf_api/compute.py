@@ -12,6 +12,18 @@ class ComputeService:
         self._cluster_name = cluster_name
         self._service_url = f'{api_client.base_url}/slurm/v0.0.42/{cluster_name}'
 
+    def get_status(self) -> Tuple[bool, str]:
+        status_url = f'{self._client.base_url}/v1alpha/status/{self._cluster_name}'
+
+        response = requests.get(url=status_url)
+        if response:
+            status = json.dumps(response.json(), indent=4)
+            return True, status
+        else:
+            error = f'GET from {status_url} failed - {response.status_code}'
+            print(f'ERROR: {error}')
+            return False, error
+
     def list_jobs(self) -> Tuple[bool, str]:
         list_url = f'{self._service_url}/jobs'
 
@@ -24,7 +36,7 @@ class ComputeService:
             return True, jobs
         else:
             error = f'GET from {list_url} failed - {response.status_code}'
-            print(error)
+            print(f'ERROR: {error}')
             return False, error
 
     def submit_job(self,
@@ -42,6 +54,8 @@ class ComputeService:
         ev_json_list = "[]"
         if env_vars:
             ev_json_list = json.dumps(env_vars)
+
+        time_seconds = time_minutes * 60
 
         job_template = \
 '''{{
@@ -66,7 +80,7 @@ class ComputeService:
                                                  cwd=workdir,
                                                  env=ev_json_list,
                                                  nodes=node_count,
-                                                 walltime=time_minutes*60)
+                                                 walltime=time_seconds)
         #print(f'DEBUG: POST\n{submit_request_str}\n')
         submit_request = submit_request_str.encode()
         
@@ -80,7 +94,7 @@ class ComputeService:
             return True, jobid
         else:
             error = f'POST to {submit_url} failed - {response.status_code}'
-            print(error)
+            print(f'ERROR: {error}')
             return False, error
 
     def get_job_info(self, jobid : str) -> Tuple[bool, str]:
@@ -91,9 +105,8 @@ class ComputeService:
         if response:
             job_info = response.json()
             info = json.dumps(job_info["jobs"], indent=4)
-            print(f'INFO: {self._cluster_name} Job Details\n{info}')
             return True, info
         else:
             error = f'GET from {cluster_url} failed - {response.status_code}'
-            print(error)
+            print(f'ERROR: {error}')
             return False, error
