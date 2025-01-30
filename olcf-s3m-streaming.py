@@ -59,7 +59,7 @@ def main(args):
     if args.avail:
         list_services(my_strm_service)
     elif args.deploy:
-        deploy(my_strm_service, my_cluster_name)
+        deploy(my_strm_service, my_cluster_name, args.hostcount)
     elif args.info:
         info(my_strm_service, my_cluster_name)
     elif args.shutdown:
@@ -75,5 +75,6 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--shutdown', help='shutdown a service cluster', action='store_true')
     parser.add_argument('service', nargs='?', help='name of a supported streaming service', default='rabbitmq')
     parser.add_argument('cluster', nargs='?', help='name for your streaming service cluster', default='ds2hpc_demo')
+    parser.add_argument('hostcount', nargs='?', help='number of hosts for streaming service cluster', default=1)
     args = parser.parse_args()
     main(args)
