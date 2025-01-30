@@ -13,14 +13,16 @@ class ComputeService:
         self._service_url = f'{api_client.base_url}/slurm/v0.0.42/{cluster_name}'
 
     def get_system_status(self) -> Tuple[bool, str]:
-        status_url = f'{self._client.base_url}/v1alpha/status/{self._cluster_name}'
+        status_url = f'{self._client.base_url}/olcf/v1alpha/status/{self._cluster_name}'
 
         response = requests.get(url=status_url)
         if response:
-            status = json.dumps(response.json(), indent=4)
+            status_response = response.json()
+            print(f'DEBUG: {self._cluster_name} status - {json.dumps(status_response, indent=4)}')
+            status = json.dumps(status_response, indent=4)
             return True, status
         else:
-            error = f'GET from {status_url} failed - {response.status_code}'
+            error = f'GET from {status_url} failed - {response.reason} ({response.status_code})'
             print(f'ERROR: {error}')
             return False, error
         
@@ -30,17 +32,20 @@ class ComputeService:
         response = requests.get(url=status_url,
                                 headers={"Authorization": f'{self._client.api_token}'})
         if response:
-            list_response = response.json()
-            partitions = list_response["partitions"]
             qstatus = "UNKNOWN"
-            for part in partitions:
-                if json.dumps(part["name"]) == queue_name:
-                    qstatus = json.dumps(part["partition"]["state"])
-                    break
+            list_response = response.json()
+            if "partitions" in list_response:
+                partitions = list_response["partitions"]
+                for part in partitions:
+                    #print(f'DEBUG: partition info - {json.dumps(part, indent=4)}')
+                    if part["name"] == queue_name:
+                        #print(f'DEBUG: found {queue_name} partition')
+                        qstatus = json.dumps(part["partition"]["state"][0])
+                        break
             
             return True, qstatus
         else:
-            error = f'GET from {list_url} failed - {response.status_code}'
+            error = f'GET from {status_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
             print(f'ERROR: {error}')
             return False, error
 
@@ -53,10 +58,10 @@ class ComputeService:
             list_response = response.json()
             job_list = list_response["jobs"]
             jobs = json.dumps(job_list, indent=4)
-            print(f'DEBUG: Slurm Jobs on {self._cluster_name}\n{jobs}')
+            print(f'DEBUG: Slurm Jobs on {self._cluster_name} - {jobs}')
             return True, jobs
         else:
-            error = f'GET from {list_url} failed - {response.status_code}'
+            error = f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
             print(f'ERROR: {error}')
             return False, error
 
@@ -72,10 +77,10 @@ class ComputeService:
             for part in partitions:
                 part_name = json.dumps(part["name"])
                 names += f'{part_name} '
-            print(f'DEBUG: Slurm Queues on {self._cluster_name}\n{names}')
+            print(f'DEBUG: Slurm Queues on {self._cluster_name} - {names}')
             return True, names
         else:
-            error = f'GET from {list_url} failed - {response.status_code}'
+            error = f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
             print(f'ERROR: {error}')
             return False, error
     
@@ -133,7 +138,7 @@ class ComputeService:
             jobid = json.dumps(submit_response["job_id"])
             return True, jobid
         else:
-            error = f'POST to {submit_url} failed - {response.status_code}'
+            error = f'POST to {submit_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
             print(f'ERROR: {error}')
             return False, error
 
@@ -145,7 +150,7 @@ class ComputeService:
         if response:
             return True, ""
         else:
-            error = f'DELETE {job_url} failed - {response.status_code}'
+            error = f'DELETE {job_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
             print(f'ERROR: {error}')
             return False, error
 
@@ -160,7 +165,7 @@ class ComputeService:
             info = json.dumps(job_info, indent=4)
             return True, info
         else:
-            error = f'GET from {job_url} failed - {response.status_code}'
+            error = f'GET from {job_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
             print(f'ERROR: {error}')
             return False, error
         
@@ -175,6 +180,6 @@ class ComputeService:
             status = json.dumps(job_info["state"]["current"])
             return True, status
         else:
-            error = f'GET from {job_url} failed - {response.status_code}'
+            error = f'GET from {job_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
             print(f'ERROR: {error}')
             return False, error
