@@ -27,8 +27,8 @@ def submit(service : ComputeService,
            queue : str,
            project : str,
            workdir : str,
-           nodes : int = 1,
-           walltime : int = 5):
+           nodes : int,
+           walltime : int):
     print(f'++++ OLCF S3M - Compute Job Orchestration ++++ Submitting a {nodes}-node Job')
     
     jobfile = Path(job_script)
@@ -98,7 +98,9 @@ def main(args):
                job_script=my_job,
                queue=my_queue,
                project=my_project,
-               workdir=my_workdir)
+               workdir=my_workdir,
+               nodes=args.nodecount,
+               walltime=args.walltime)
     else:
         if my_job != "invalid-job":
             job_info(my_comp_service, my_job)
@@ -116,5 +118,7 @@ if __name__ == '__main__':
     parser.add_argument('system', nargs='?', help='name of the target HPC system', default='invalid-system')
     parser.add_argument('queue', nargs='?', help='job queue to use on the target system', default='invalid-queue')
     parser.add_argument('job', nargs='?', help='job script file to submit or existing job id', default='invalid-job')
+    parser.add_argument('nodecount', nargs='?', help='number of compute nodes for job submission', type=int, default=1)
+    parser.add_argument('walltime', nargs='?', help='wall time in minutes for job submission', type=int, default=5)
     args = parser.parse_args()
     main(args)
