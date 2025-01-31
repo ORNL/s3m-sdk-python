@@ -18,7 +18,7 @@ class ComputeService:
         response = requests.get(url=status_url)
         if response:
             status_response = response.json()
-            print(f'DEBUG: {self._cluster_name} status - {json.dumps(status_response, indent=4)}')
+            #print(f'DEBUG: {self._cluster_name} status - {json.dumps(status_response, indent=4)}')
             status = json.dumps(status_response, indent=4)
             return True, status
         else:
@@ -128,7 +128,7 @@ class ComputeService:
                                                  env=ev_json_list,
                                                  nodes=str(node_count),
                                                  walltime=str(time_seconds))
-        print(f'DEBUG: POST\n{submit_request_str}\n')
+        #print(f'DEBUG: POST\n{submit_request_str}\n')
         submit_request = submit_request_str.encode()
         
         response = requests.post(url=submit_url, data=submit_request,
