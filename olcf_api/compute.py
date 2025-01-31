@@ -100,7 +100,7 @@ class ComputeService:
         if env_vars:
             ev_json_list = json.dumps(env_vars)
 
-        time_seconds = time_minutes * 60
+        time_seconds = 60 * time_minutes
 
         job_template = \
 '''{{
@@ -109,7 +109,7 @@ class ComputeService:
         "name": "{job_name}",
         "account": "{account}",
         "partition": "{queue}",
-        "current_working_directory": {cwd},
+        "current_working_directory": "{cwd}",
         "environment": {env},
         "nodes": "{nodes}",
         "time_limit": {{
@@ -118,15 +118,17 @@ class ComputeService:
         }}
     }}
 }}'''
-        submit_request_str = job_template.format(contents=script_contents,
+        escaped_contents = script_contents.replace('"', '\\"')
+        escaped_contents = escaped_contents.replace('\n', '\\\\n')
+        submit_request_str = job_template.format(contents=escaped_contents,
                                                  job_name=job_name,
                                                  account=project,
                                                  queue=job_queue,
                                                  cwd=workdir,
                                                  env=ev_json_list,
-                                                 nodes=node_count,
-                                                 walltime=time_seconds)
-        #print(f'DEBUG: POST\n{submit_request_str}\n')
+                                                 nodes=str(node_count),
+                                                 walltime=str(time_seconds))
+        print(f'DEBUG: POST\n{submit_request_str}\n')
         submit_request = submit_request_str.encode()
         
         response = requests.post(url=submit_url, data=submit_request,
