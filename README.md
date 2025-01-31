@@ -1,7 +1,9 @@
+<<<<<<< HEAD
 # Overview
 
-This repository contains the `olcf_api` library of python modules wrapping the OLCF's
-Secure Scientific Service Mesh (S3M) REST APIs, and a collection of python command-line 
+This repository contains the `olcf_api` library of python modules wrapping the
+[OLCF's Secure Scientific Service Mesh (S3M) REST APIs][olcf-s3m-api-docs],
+and a collection of python command-line 
 tools that make it easy to test the library and interact with S3M.
 
 For more information on the available S3M APIs, please visit https://s3m.apps.olivine.ccs.ornl.gov/docs/
@@ -131,3 +133,20 @@ export OLCF_API_WORKDIR="/lustre/polis/csc123/proj-shared"
         ...
     }
     ```
+# Development
+
+Prerequisites:
+  - [uv][uv-docs] is suggested to use for package management
+
+To setup development environment using `uv`
+```
+uv pip install -e .
+```
+
+To run tests:
+```
+uv run pytest tests/
+```
+
+[uv-docs]: https://astral.sh/blog/uv-unified-python-packaging
+[olcf-s3m-api-docs]: https://s3m.apps.olivine.ccs.ornl.gov/docs/
