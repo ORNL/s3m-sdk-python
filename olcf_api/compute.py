@@ -119,7 +119,7 @@ class ComputeService:
     }}
 }}'''
         escaped_contents = script_contents.replace('"', '\\"')
-        escaped_contents = escaped_contents.replace('\n', '\\\\n')
+        escaped_contents = escaped_contents.replace('\n', '\\n')
         submit_request_str = job_template.format(contents=escaped_contents,
                                                  job_name=job_name,
                                                  account=project,
