@@ -88,7 +88,6 @@ export OLCF_API_WORKDIR="/lustre/polis/csc123/proj-shared"
     ``` bash
     > python3 olcf-s3m-compute.py --queuelist defiant
     ++++ OLCF S3M - Compute Job Orchestration ++++ Listing Queues
-    DEBUG: Slurm Queues on defiant - "batch-gpu" "batch-cpu" "cron"
     "batch-gpu" "batch-cpu" "cron"
     ```
 
