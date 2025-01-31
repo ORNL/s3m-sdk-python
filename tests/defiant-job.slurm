@@ -40,7 +40,7 @@ echo "At $(date), running hostname : "
 srun -n $n_procs -N $n_nodes /bin/hostname
 echo
 echo "At $(date), running top in batch mode for 60 seconds : "
-srun -n $n_procs -N $n_nodes /usr/bin/top -b -d 6 -n 10
+srun -n $n_procs -N $n_nodes /usr/bin/top -b -d 6 -n 10 -u $USER
 echo
 
 # Show active job steps
