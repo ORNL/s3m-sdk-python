@@ -5,7 +5,7 @@ stages:
 
 variables:
   GIT_STRATEGY: clone
-  CONTAINER_REGISTRY_URL: "${CONTAINER_REGISTRY}/${CI_PROJECT_PATH}"
+  CONTAINER_REGISTRY_URL: "${CONTAINER_REGISTRY}/olcf-s3m-python"
 
 # This import is for the func_rse_docker_* functions
 before_script:
