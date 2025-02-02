@@ -1,0 +1,99 @@
+stages:
+  - build
+  - test
+  - package
+
+variables:
+  GIT_STRATEGY: clone
+  CONTAINER_REGISTRY_URL: "${CONTAINER_REGISTRY}/${CI_PROJECT_PATH}"
+
+# This import is for the func_rse_docker_* functions
+before_script:
+  - curl https://code.ornl.gov/rse-deployment/rse-sharables/raw/master/rse-bash-modules.sh -O
+  - source rse-bash-modules.sh
+  - func_rse_docker_cleanup
+  - docker login -u ${CONTAINER_REGISTRY_USER} -p ${CONTAINER_REGISTRY_PASSWORD} ${CONTAINER_REGISTRY}
+
+after_script:
+  - source rse-bash-modules.sh
+  - func_rse_docker_cleanup
+  - sudo chown -R gitlab-runner .
+
+container-build:
+  stage: build
+  script:
+    - >
+      docker build
+      -f Dockerfile
+      -t olcf-s3m-python .
+    - docker tag olcf-s3m-python $CONTAINER_REGISTRY_URL/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA
+    - docker tag olcf-s3m-python $CONTAINER_REGISTRY_URL/$CI_COMMIT_REF_NAME:latest
+    - docker push $CONTAINER_REGISTRY_URL/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA
+    - docker push $CONTAINER_REGISTRY_URL/$CI_COMMIT_REF_NAME:latest
+  tags:
+    - intersect-sdk-builder
+
+lint:
+  stage: test
+  script:
+    - >
+      docker run --rm $CONTAINER_REGISTRY_URL/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA sh -ec "
+      uv run ruff check
+      "
+  tags:
+    - intersect-sdk-builder
+
+test:
+  stage: test
+  script:
+    - >
+      docker run --rm $CONTAINER_REGISTRY_URL/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA sh -ec "
+      uv run pytest tests/
+      "
+  tags:
+    - intersect-sdk-builder
+
+
+coverage:
+  stage: test
+  script:
+    - docker pull $CONTAINER_REGISTRY_URL/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA
+    - >
+      docker run --rm
+      --volume $PWD/reports:/app/reports
+      $CONTAINER_REGISTRY_URL/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA sh -ec "
+      uv run pytest --cov=src/ --cov-fail-under=25 --cov-report=html:reports/htmlcov/ --cov-report=xml:reports/coverage.xml tests/"
+    - sudo sed -i "s:<source>/app:<source>${CI_BUILDS_DIR}/${CI_PROJECT_PATH}:" reports/coverage.xml
+  coverage: '/coverage: \d+.\d+%/' # for GitLab<15.0 use project settings, this line is noop
+  artifacts:
+    when: always
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: reports/coverage.xml
+    paths:
+      - reports/
+  tags:
+    - intersect-sdk-builder
+
+publish-package:
+  stage: package
+  script:
+    - >
+      docker run --rm
+      -e TWINE_PASSWORD=${CI_JOB_TOKEN}
+      -e TWINE_USERNAME=gitlab-ci-token 
+      $CONTAINER_REGISTRY_URL/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA
+      /bin/bash -c
+      "
+      python -m build
+      &&  python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
+      "
+  tags:
+    - intersect-sdk-builder
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+.*$/
+
+
+
+
