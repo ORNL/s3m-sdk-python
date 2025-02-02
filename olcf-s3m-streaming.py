@@ -15,7 +15,7 @@ def list_services(service : StreamingService):
     print('\n\n')
 
 def show(service : StreamingService):
-    print(f'++++ OLCF S3M - Streaming Service Orchestration ++++ Showing Existing Deployments')
+    print('++++ OLCF S3M - Streaming Service Orchestration ++++ Showing Existing Deployments')
     success, msg = service.list_clusters()
     if success:
         print(msg)

@@ -25,7 +25,7 @@ class ComputeService:
             error = f'GET from {status_url} failed - {response.reason} ({response.status_code})'
             print(f'ERROR: {error}')
             return False, error
-        
+
     def get_queue_status(self, queue_name : str) -> Tuple[bool, str]:
         status_url = f'{self._service_url}/partitions'
 
@@ -42,7 +42,7 @@ class ComputeService:
                         #print(f'DEBUG: found {queue_name} partition')
                         qstatus = json.dumps(part["partition"]["state"][0])
                         break
-            
+
             return True, qstatus
         else:
             error = f'GET from {status_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
@@ -83,7 +83,7 @@ class ComputeService:
             error = f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
             print(f'ERROR: {error}')
             return False, error
-    
+
     def submit_job(self,
                    project : str,
                    workdir : str,
@@ -95,7 +95,7 @@ class ComputeService:
                    env_vars : List[str] = None) -> Tuple[bool, str]:
 
         submit_url = f'{self._service_url}/job/submit'
-        
+
         ev_json_list = "[]"
         if env_vars:
             ev_json_list = json.dumps(env_vars)
@@ -130,12 +130,12 @@ class ComputeService:
                                                  walltime=str(time_seconds))
         #print(f'DEBUG: POST\n{submit_request_str}\n')
         submit_request = submit_request_str.encode()
-        
+
         response = requests.post(url=submit_url, data=submit_request,
                                  headers={"Authorization": f'{self._client.api_token}', "Content-Type": "application/json"})
         if response:
             submit_response = response.json()
-            submit_details = json.dumps(submit_response)
+            #submit_details = json.dumps(submit_response)
             #print(f'DEBUG: submit response\n{submit_details}')
             jobid = json.dumps(submit_response["job_id"])
             return True, jobid
@@ -146,7 +146,7 @@ class ComputeService:
 
     def cancel_job(self, jobid : str) -> Tuple[bool, str]:
         job_url = f'{self._service_url}/job/{jobid}'
-        
+
         response = requests.delete(url=job_url,
                                    headers={"Authorization": f'{self._client.api_token}'})
         if response:
@@ -158,7 +158,7 @@ class ComputeService:
 
     def get_job_info(self, jobid : str) -> Tuple[bool, str]:
         job_url = f'{self._service_url}/job/{jobid}'
-        
+
         response = requests.get(url=job_url,
                                 headers={"Authorization": f'{self._client.api_token}'})
         if response:
@@ -170,10 +170,10 @@ class ComputeService:
             error = f'GET from {job_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
             print(f'ERROR: {error}')
             return False, error
-        
+
     def get_job_status(self, jobid : str) -> Tuple[bool, str]:
         job_url = f'{self._service_url}/job/{jobid}'
-        
+
         response = requests.get(url=job_url,
                                 headers={"Authorization": f'{self._client.api_token}'})
         if response:
