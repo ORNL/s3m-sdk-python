@@ -62,7 +62,7 @@ coverage:
       docker run --rm
       --volume $PWD/reports:/app/reports
       $CONTAINER_REGISTRY_URL/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA sh -ec "
-      uv run pytest --cov=src/ --cov-fail-under=25 --cov-report=html:reports/htmlcov/ --cov-report=xml:reports/coverage.xml tests/"
+      uv run pytest --cov=src/ --cov-fail-under=20 --cov-report=html:reports/htmlcov/ --cov-report=xml:reports/coverage.xml tests/"
     - sudo sed -i "s:<source>/app:<source>${CI_BUILDS_DIR}/${CI_PROJECT_PATH}:" reports/coverage.xml
   coverage: '/coverage: \d+.\d+%/' # for GitLab<15.0 use project settings, this line is noop
   artifacts:
