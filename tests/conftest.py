@@ -1,7 +1,7 @@
 import pytest
 
 
-from olcf_api.client import OLCFAPIClient
+from olcf_s3m_api.client import OLCFAPIClient
 
 @pytest.fixture
 def client(requests_mock):

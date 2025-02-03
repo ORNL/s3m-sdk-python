@@ -1,4 +1,4 @@
-from olcf_api.streaming import StreamingService
+from olcf_s3m_api.streaming import StreamingService
 
 
 def test_streaming_init(client):
