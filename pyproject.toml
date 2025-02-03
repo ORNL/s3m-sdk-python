@@ -1,7 +1,7 @@
 [project]
 name = "olcf-s3m-api"
 version = "0.1.0"
-description = "Add your description here"
+description = "Python Client for OLCF S3M API"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -18,5 +18,5 @@ dev = [
 
 
 [build-system]
-requires = ["hatchling"]
+urequires = ["hatchling"]
 build-backend = "hatchling.build"
