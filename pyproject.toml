@@ -18,5 +18,5 @@ dev = [
 
 
 [build-system]
-urequires = ["hatchling"]
+requires = ["hatchling"]
 build-backend = "hatchling.build"
