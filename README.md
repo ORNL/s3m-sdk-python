@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Overview
 
 This repository contains the `olcf_s3m_api` library of python modules wrapping the
