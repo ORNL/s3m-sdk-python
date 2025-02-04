@@ -5,8 +5,8 @@ import argparse
 from pathlib import Path
 from os import getenv
 
-from olcf_api.client import OLCFAPIClient
-from olcf_api.compute import ComputeService
+from olcf_s3m_api.client import OLCFAPIClient
+from olcf_s3m_api.compute import ComputeService
 
 def list_jobs(service : ComputeService):
     print('++++ OLCF S3M - Compute Job Orchestration ++++ Listing Jobs')
@@ -64,10 +64,10 @@ def job_info(service : ComputeService, job_id : str):
 
 def status(service : ComputeService, queue : str = None):
     if queue:
-        print(f'++++ OLCF S3M - Compute Job Orchestration ++++ Getting Compute Queue Status')
+        print('++++ OLCF S3M - Compute Job Orchestration ++++ Getting Compute Queue Status')
         success, msg = service.get_queue_status(queue)
     else:
-        print(f'++++ OLCF S3M - Compute Job Orchestration ++++ Getting Compute System Status')
+        print('++++ OLCF S3M - Compute Job Orchestration ++++ Getting Compute System Status')
         success, msg = service.get_system_status()
     if success:
         print(msg)
@@ -81,9 +81,9 @@ def main(args):
     my_queue = args.queue
     my_job = args.job
     
-    my_api_client = OLCFAPIClient(api_token=getenv("OLCF_API_TOKEN", "InvalidToken"))
-    my_project = getenv("OLCF_API_PROJECT", "InvalidProject")
-    my_workdir = getenv("OLCF_API_WORKDIR", str(Path.cwd()))
+    my_api_client = OLCFAPIClient(api_token=getenv("olcf_s3m_api_TOKEN", "InvalidToken"))
+    my_project = getenv("olcf_s3m_api_PROJECT", "InvalidProject")
+    my_workdir = getenv("olcf_s3m_api_WORKDIR", str(Path.cwd()))
     
     my_comp_service = ComputeService(cluster_name=my_system_name,
                                      api_client=my_api_client)

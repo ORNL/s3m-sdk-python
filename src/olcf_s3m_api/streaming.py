@@ -46,13 +46,13 @@ class StreamingService:
                       node_count : int = 1,
                       cpu_count : int = 4,
                       ram_gib : int = 4) -> Tuple[bool, str]:
-        
+
         cluster_kind = "general"
         if self._service_name == "redis":
             cluster_kind = "dragonfly-general"
 
         provision_url = f'{self._service_url}/provision_cluster'
-        
+
         provision_template = \
 '''{{
     "kind": "{kind}",
@@ -70,7 +70,7 @@ class StreamingService:
                                                           ram=ram_gib)
         #print(f'DEBUG: POST\n{provision_request_str}\n')
         provision_request = provision_request_str.encode()
-        
+
         response = requests.post(url=provision_url, data=provision_request,
                                  headers={"Authorization": f'{self._client.api_token}', "Content-Type": "application/json"})
         #print(f'DEBUG: response\n{response.json()}\n')
@@ -83,7 +83,7 @@ class StreamingService:
             if wait_for_healthy:
                 self._cluster_healthy = False
                 timeout = 60
-                waited = 0    
+                waited = 0
                 while not self._cluster_healthy:
                     rc, info = self.get_cluster_info(cluster_name)
                     if rc:
@@ -106,7 +106,7 @@ class StreamingService:
 
     def get_cluster_info(self, cluster_name : str) -> Tuple[bool, str]:
         cluster_url = f'{self._service_url}/cluster/{cluster_name}'
-        
+
         response = requests.get(url=cluster_url,
                                 headers={"Authorization": f'{self._client.api_token}'})
         if response:
@@ -121,7 +121,7 @@ class StreamingService:
 
     def get_cluster_deployment(self, cluster_name : str) -> Union[StreamingServiceDeployment, None]:
         cluster_url = f'{self._service_url}/cluster/{cluster_name}'
-        
+
         response = requests.get(url=cluster_url,
                                 headers={"Authorization": f'{self._client.api_token}'})
         if response:
@@ -130,9 +130,9 @@ class StreamingService:
                 error = f'Failed to extract cluster information using key "cluster" from response: {cluster_response}'
                 print(f'ERROR: {error}')
                 return None
-            
+
             self._cluster_info = json.dumps(cluster_response["cluster"], indent=4)
-            
+
             hosts = None
             ports = None
             endpoints_key = "brokerEndpoints" if self._service_name == "rabbitmq" else "endpoints"
@@ -150,11 +150,11 @@ class StreamingService:
                         ports = dict()
                         ports["amqps"] = int(hostport[1])
 
-            
+
             user = None
             if "username" in cluster_response["cluster"]:
                 user = cluster_response["cluster"]["username"]
-            
+
             passwd = None
             if "password" in cluster_response["cluster"]:
                 passwd = cluster_response["cluster"]["password"]
@@ -162,14 +162,14 @@ class StreamingService:
             resources = None
             if "resourceSettings" in cluster_response["cluster"]:
                 resources = cluster_response["cluster"]["resourceSettings"]
-            
+
             self._deployment = StreamingServiceDeployment(service_name=self._service_name,
                                                           service_ports=ports,
                                                           cluster_name=cluster_name,
                                                           cluster_hosts=hosts,
                                                           cluster_resources=resources,
                                                           auth_user=user, auth_pass=passwd)
-            
+
             return self._deployment
         else:
             error = f'GET from {cluster_url} failed - {response.reason} ({response.status_code}) - {response.json()}'

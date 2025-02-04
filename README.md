@@ -1,7 +1,9 @@
+<<<<<<< HEAD
 # Overview
 
-This repository contains the `olcf_api` library of python modules wrapping the OLCF's
-Secure Scientific Service Mesh (S3M) REST APIs, and a collection of python command-line 
+This repository contains the `olcf_s3m_api` library of python modules wrapping the
+[OLCF's Secure Scientific Service Mesh (S3M) REST APIs][olcf-s3m-api-docs],
+and a collection of python command-line 
 tools that make it easy to test the library and interact with S3M.
 
 For more information on the available S3M APIs, please visit https://s3m.apps.olivine.ccs.ornl.gov/docs/
@@ -10,22 +12,22 @@ For more information on the available S3M APIs, please visit https://s3m.apps.ol
 
 All the command-line tools assume you have already acquired an OLCF API access token as described in the 'Getting Started' section of the S3M docs.
 
-You should set the value of the `OLCF_API_TOKEN` environment variable to your token string.
+You should set the value of the `olcf_s3m_api_TOKEN` environment variable to your token string.
 
 ``` bash
-export OLCF_API_TOKEN="abcDEFxyZ123..."
+export olcf_s3m_api_TOKEN="abcDEFxyZ123..."
 ```
 
-If you intend to use the `olcf-s3m-compute.py` tool, you will additionally need to set the `OLCF_API_PROJECT` and `OLCF_API_WORKDIR` environment variables to the appropriate values for submitting jobs to the OLCF ACE Defiant machine (see [here](https://docs.olcf.ornl.gov/ace_testbed/defiant_quick_start_guide.html)). For example, assuming an OLCF Open project id of 'CSC123' and a job working directory within the project-shared area on the Lustre filesystem, you could use the following settings:
+If you intend to use the `olcf-s3m-compute.py` tool, you will additionally need to set the `olcf_s3m_api_PROJECT` and `olcf_s3m_api_WORKDIR` environment variables to the appropriate values for submitting jobs to the OLCF ACE Defiant machine (see [here](https://docs.olcf.ornl.gov/ace_testbed/defiant_quick_start_guide.html)). For example, assuming an OLCF Open project id of 'CSC123' and a job working directory within the project-shared area on the Lustre filesystem, you could use the following settings:
 
 ``` bash
-export OLCF_API_PROJECT="csc123"
-export OLCF_API_WORKDIR="/lustre/polis/csc123/proj-shared"
+export olcf_s3m_api_PROJECT="csc123"
+export olcf_s3m_api_WORKDIR="/lustre/polis/csc123/proj-shared"
 ```
 
 ## olcf-s3m-token.py
 
-1. Display current token (as set in `OLCF_API_TOKEN`)
+1. Display current token (as set in `olcf_s3m_api_TOKEN`)
 
     ``` bash
     > python3 olcf-s3m-token.py
@@ -131,3 +133,20 @@ export OLCF_API_WORKDIR="/lustre/polis/csc123/proj-shared"
         ...
     }
     ```
+# Development
+
+Prerequisites:
+  - [uv][uv-docs] is suggested to use for package management
+
+To setup development environment using `uv`
+```
+uv pip install -e .
+```
+
+To run tests:
+```
+uv run pytest tests/
+```
+
+[uv-docs]: https://astral.sh/blog/uv-unified-python-packaging
+[olcf-s3m-api-docs]: https://s3m.apps.olivine.ccs.ornl.gov/docs/

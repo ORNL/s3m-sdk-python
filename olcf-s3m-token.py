@@ -4,8 +4,8 @@ import argparse
 
 from os import getenv
 
-from olcf_api.client import OLCFAPIClient
-from olcf_api.token import TokenService
+from olcf_s3m_api.client import OLCFAPIClient
+from olcf_s3m_api.token import TokenService
 
 
 def info(service : TokenService):
@@ -30,7 +30,7 @@ def show(service : TokenService):
 def main(args):
     #print("DEBUG: Arguments\n", args)
 
-    my_api_client = OLCFAPIClient(api_token=getenv("OLCF_API_TOKEN", "InvalidToken"))
+    my_api_client = OLCFAPIClient(api_token=getenv("olcf_s3m_api_TOKEN", "InvalidToken"))
     my_token_service = TokenService(api_client=my_api_client)
     if args.info:
         info(my_token_service)

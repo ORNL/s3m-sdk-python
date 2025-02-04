@@ -4,8 +4,8 @@ import argparse
 
 from os import getenv
 
-from olcf_api.client import OLCFAPIClient
-from olcf_api.streaming import StreamingService
+from olcf_s3m_api.client import OLCFAPIClient
+from olcf_s3m_api.streaming import StreamingService
 
 def list_services(service : StreamingService):
     print('++++ OLCF S3M - Streaming Service Orchestration ++++ Listing Available Services')
@@ -15,7 +15,7 @@ def list_services(service : StreamingService):
     print('\n\n')
 
 def show(service : StreamingService):
-    print(f'++++ OLCF S3M - Streaming Service Orchestration ++++ Showing Existing Deployments')
+    print('++++ OLCF S3M - Streaming Service Orchestration ++++ Showing Existing Deployments')
     success, msg = service.list_clusters()
     if success:
         print(msg)
@@ -53,7 +53,7 @@ def main(args):
 
     my_strm_service_name = args.service
     my_cluster_name = args.cluster
-    my_api_client = OLCFAPIClient(api_token=getenv("OLCF_API_TOKEN", "InvalidToken"))
+    my_api_client = OLCFAPIClient(api_token=getenv("olcf_s3m_api_TOKEN", "InvalidToken"))
     my_strm_service = StreamingService(service_name=my_strm_service_name,
                                        api_client=my_api_client)
     if args.avail:
