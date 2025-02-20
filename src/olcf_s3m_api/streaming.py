@@ -63,13 +63,27 @@ class StreamingService:
         "nodes": {nodes}
     }}
 }}'''
+        provision_template_no_nodes = \
+'''{{
+    "kind": "{kind}",
+    "name": "{cluster}",
+    "resourceSettings": {{
+        "cpus": {cpus},
+        "ram-gbs": {ram}
+    }}
+}}'''
         provision_request_str = provision_template.format(kind=cluster_kind,
                                                           cluster=cluster_name,
                                                           nodes=node_count,
                                                           cpus=cpu_count,
                                                           ram=ram_gib)
+
+        provision_request_str_no_nodes = provision_template_no_nodes.format(kind=cluster_kind,
+                                                          cluster=cluster_name,
+                                                          cpus=cpu_count,
+                                                          ram=ram_gib)
         #print(f'DEBUG: POST\n{provision_request_str}\n')
-        provision_request = provision_request_str.encode()
+        provision_request = provision_request_str_no_nodes.encode() if node_count <= 1 else provision_request_str.encode()
 
         response = requests.post(url=provision_url, data=provision_request,
                                  headers={"Authorization": f'{self._client.api_token}', "Content-Type": "application/json"})
