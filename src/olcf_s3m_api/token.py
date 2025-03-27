@@ -3,6 +3,7 @@ import requests
 
 from typing import Tuple
 
+from .error import *
 from .client import OLCFAPIClient
 
 class TokenService:
@@ -25,9 +26,7 @@ class TokenService:
             #print(f'DEBUG: Token {self._client.api_token}\n{self._token_info}')
             return True, self._token_info
         else:
-            error = f'GET from {token_url} failed - {response.status_code}'
-            print(f'ERROR: {error}')
-            return False, error
+            raise AuthenticationError(f'GET from {token_url} failed - {response.status_code}')
 
     def revoke_token(self) -> Tuple[bool, str]:
         revoke_url = f'{self._service_url}/ctls/revoke'
@@ -37,6 +36,4 @@ class TokenService:
         if response:
             return True, None
         else:
-            error = f'DELETE {revoke_url} failed - {response.status_code}'
-            print(f'ERROR: {error}')
-            return False, error
+            raise AuthenticationError(f'DELETE {revoke_url} failed - {response.status_code}')

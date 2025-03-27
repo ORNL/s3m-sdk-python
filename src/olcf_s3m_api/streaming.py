@@ -5,6 +5,7 @@ import time
 from dataclasses import dataclass
 from typing import Dict, List, Tuple, Union
 
+from .error import *
 from .client import OLCFAPIClient
 
 @dataclass
@@ -36,9 +37,7 @@ class StreamingService:
             services = json.dumps(service_list["backends"], indent=4)
             return True, services
         else:
-            error = f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
-            print(f'ERROR: {error}')
-            return False, error
+            raise AuthenticationError(f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
     def start_cluster(self,
                       cluster_name : str,
@@ -114,9 +113,7 @@ class StreamingService:
 
             return True, provision_details
         else:
-            error = f'POST to {provision_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
-            print(f'ERROR: {error}')
-            return False, error
+            raise AuthenticationError(f'POST to {provision_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
     def get_cluster_info(self, cluster_name : str) -> Tuple[bool, str]:
         cluster_url = f'{self._service_url}/cluster/{cluster_name}'
@@ -129,9 +126,7 @@ class StreamingService:
             self._cluster_name = cluster_name
             return True, self._cluster_info
         else:
-            error = f'GET from {cluster_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
-            print(f'ERROR: {error}')
-            return False, error
+            raise AuthenticationError(f'GET from {cluster_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
     def get_cluster_deployment(self, cluster_name : str) -> Union[StreamingServiceDeployment, None]:
         cluster_url = f'{self._service_url}/cluster/{cluster_name}'
@@ -141,9 +136,7 @@ class StreamingService:
         if response:
             cluster_response = response.json()
             if "cluster" not in cluster_response:
-                error = f'Failed to extract cluster information using key "cluster" from response: {cluster_response}'
-                print(f'ERROR: {error}')
-                return None
+                raise S3MError(f'Failed to extract cluster information using key "cluster" from response: {cluster_response}')
 
             self._cluster_info = json.dumps(cluster_response["cluster"], indent=4)
 
@@ -186,9 +179,7 @@ class StreamingService:
 
             return self._deployment
         else:
-            error = f'GET from {cluster_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
-            print(f'ERROR: {error}')
-            return None
+            raise AuthenticationError(f'GET from {cluster_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
     def stop_cluster(self, cluster_name : str) -> Tuple[bool, str]:
         cluster_url = f'{self._service_url}/cluster/{cluster_name}'
@@ -200,9 +191,7 @@ class StreamingService:
             shutdown_info = f'INFO: {self._service_name} Cluster Shutdown\n{shutdown_details}'
             return True, shutdown_info
         else:
-            error = f'DELETE {cluster_url} failed - {response.reason} ({response.status_code})'
-            print(f'ERROR: {error}')
-            return False, error
+            raise AuthenticationError(f'DELETE {cluster_url} failed - {response.reason} ({response.status_code})')
 
     def list_clusters(self) -> Tuple[bool, str]:
         list_url = f'{self._service_url}/list_clusters'
@@ -214,6 +203,4 @@ class StreamingService:
             clusters = json.dumps(cluster_list["clusters"], indent=4)
             return True, clusters
         else:
-            error = f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
-            print(f'ERROR: {error}')
-            return False, error
+            raise AuthenticationError(f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}')

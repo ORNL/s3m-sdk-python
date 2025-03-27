@@ -3,6 +3,7 @@ import requests
 
 from typing import List, Tuple
 
+from .error import *
 from .client import OLCFAPIClient
 
 class ComputeService:
@@ -22,9 +23,7 @@ class ComputeService:
             status = json.dumps(status_response, indent=4)
             return True, status
         else:
-            error = f'GET from {status_url} failed - {response.reason} ({response.status_code})'
-            print(f'ERROR: {error}')
-            return False, error
+            raise AuthenticationError(f'GET from {status_url} failed - {response.reason} ({response.status_code})')
 
     def get_queue_status(self, queue_name : str) -> Tuple[bool, str]:
         status_url = f'{self._service_url}/partitions'
@@ -45,9 +44,7 @@ class ComputeService:
 
             return True, qstatus
         else:
-            error = f'GET from {status_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
-            print(f'ERROR: {error}')
-            return False, error
+            raise AuthenticationError(f'GET from {status_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
     def list_jobs(self) -> Tuple[bool, str]:
         list_url = f'{self._service_url}/jobs'
@@ -61,9 +58,7 @@ class ComputeService:
             print(f'DEBUG: Slurm Jobs on {self._cluster_name} - {jobs}')
             return True, jobs
         else:
-            error = f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
-            print(f'ERROR: {error}')
-            return False, error
+            raise AuthenticationError(f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
     def list_queues(self) -> Tuple[bool, str]:
         list_url = f'{self._service_url}/partitions'
@@ -80,9 +75,7 @@ class ComputeService:
             print(f'DEBUG: Slurm Queues on {self._cluster_name} - {names}')
             return True, names
         else:
-            error = f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
-            print(f'ERROR: {error}')
-            return False, error
+            raise AuthenticationError(f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
     def submit_job(self,
                    project : str,
@@ -140,9 +133,7 @@ class ComputeService:
             jobid = json.dumps(submit_response["job_id"])
             return True, jobid
         else:
-            error = f'POST to {submit_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
-            print(f'ERROR: {error}')
-            return False, error
+            raise AuthenticationError(f'POST to {submit_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
     def cancel_job(self, jobid : str) -> Tuple[bool, str]:
         job_url = f'{self._service_url}/job/{jobid}'
@@ -152,9 +143,7 @@ class ComputeService:
         if response:
             return True, ""
         else:
-            error = f'DELETE {job_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
-            print(f'ERROR: {error}')
-            return False, error
+            raise AuthenticationError(f'DELETE {job_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
     def get_job_info(self, jobid : str) -> Tuple[bool, str]:
         job_url = f'{self._service_url}/job/{jobid}'
@@ -167,9 +156,7 @@ class ComputeService:
             info = json.dumps(job_info, indent=4)
             return True, info
         else:
-            error = f'GET from {job_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
-            print(f'ERROR: {error}')
-            return False, error
+            raise AuthenticationError(f'GET from {job_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
     def get_job_status(self, jobid : str) -> Tuple[bool, str]:
         job_url = f'{self._service_url}/job/{jobid}'
@@ -182,6 +169,4 @@ class ComputeService:
             status = json.dumps(job_info["state"]["current"])
             return True, status
         else:
-            error = f'GET from {job_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
-            print(f'ERROR: {error}')
-            return False, error
+            raise AuthenticationError(f'GET from {job_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
