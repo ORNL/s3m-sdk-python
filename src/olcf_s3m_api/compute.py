@@ -3,7 +3,7 @@ import requests
 
 from typing import List, Tuple
 
-from .error import *
+from .error import S3MError, AuthenticationError
 from .client import OLCFAPIClient
 
 class ComputeService:

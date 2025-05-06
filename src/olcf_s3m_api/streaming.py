@@ -5,7 +5,7 @@ import time
 from dataclasses import dataclass
 from typing import Dict, List, Tuple, Union
 
-from .error import *
+from .error import S3MError, AuthenticationError
 from .client import OLCFAPIClient
 
 @dataclass
