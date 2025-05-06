@@ -3,7 +3,7 @@ import requests
 
 from typing import Tuple
 
-from .error import S3MError, AuthenticationError
+from .error import AuthenticationError
 from .client import OLCFAPIClient
 
 class TokenService:

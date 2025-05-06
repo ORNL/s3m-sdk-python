@@ -12,11 +12,11 @@ logging.basicConfig(
 
 class S3MError(Exception):
 	def __init__(self, message = "S3M Error"):
-		self.message = message;
-		super().__init__(self.message);
-		logging.error(self.message);
+		self.message = message
+		super().__init__(self.message)
+		logging.error(self.message)
 
 # Authentication
 class AuthenticationError(S3MError):
 	def __init__(self, message = ""):
-		super().__init__(message);
+		super().__init__(message)
