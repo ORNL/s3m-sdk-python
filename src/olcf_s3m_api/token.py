@@ -3,6 +3,7 @@ import requests
 
 from typing import Tuple
 
+from .request import S3MRequest
 from .error import AuthenticationError
 from .client import OLCFAPIClient
 
@@ -18,8 +19,9 @@ class TokenService:
     def get_token_info(self) -> Tuple[bool, str]:
         token_url = f'{self._service_url}/ctls/introspect'
         
-        response = requests.get(url=token_url,
-                                headers={"Authorization": f'{self._client.api_token}'})
+        client = S3MRequest()
+        response = client.get(url=token_url,
+                              headers={"Authorization": f'{self._client.api_token}'})
         if response:
             token_response = response.json()
             self._token_info = json.dumps(token_response["token"], indent=4)
@@ -31,8 +33,9 @@ class TokenService:
     def revoke_token(self) -> Tuple[bool, str]:
         revoke_url = f'{self._service_url}/ctls/revoke'
 
-        response = requests.delete(url=revoke_url,
-                                   headers={"Authorization": f'{self._client.api_token}'})
+        client = S3MRequest()
+        response = client.delete(url=revoke_url,
+                                 headers={"Authorization": f'{self._client.api_token}'})
         if response:
             return True, None
         else:

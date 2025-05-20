@@ -5,6 +5,7 @@ import time
 from dataclasses import dataclass
 from typing import Dict, List, Tuple, Union
 
+from .request import S3MRequest
 from .error import S3MError, AuthenticationError
 from .client import OLCFAPIClient
 
@@ -30,8 +31,9 @@ class StreamingService:
     def list_services(self) -> Tuple[bool, str]:
         list_url = f'{self._client.base_url}/olcf/v1alpha/streaming/list_backends'
 
-        response = requests.get(url=list_url,
-                                headers={"Authorization": f'{self._client.api_token}'})
+        client = S3MRequest()
+        response = client.get(url=list_url,
+                              headers={"Authorization": f'{self._client.api_token}'})
         if response:
             service_list = response.json()
             services = json.dumps(service_list["backends"], indent=4)
@@ -84,8 +86,9 @@ class StreamingService:
         #print(f'DEBUG: POST\n{provision_request_str}\n')
         provision_request = provision_request_str_no_nodes.encode() if node_count <= 1 else provision_request_str.encode()
 
-        response = requests.post(url=provision_url, data=provision_request,
-                                 headers={"Authorization": f'{self._client.api_token}', "Content-Type": "application/json"})
+        client = S3MRequest()
+        response = client.post(url=provision_url, data=provision_request,
+                               headers={"Authorization": f'{self._client.api_token}', "Content-Type": "application/json"})
         #print(f'DEBUG: response\n{response.json()}\n')
         if response:
             provision_details = json.dumps(response.json(), indent=4)
@@ -118,8 +121,9 @@ class StreamingService:
     def get_cluster_info(self, cluster_name : str) -> Tuple[bool, str]:
         cluster_url = f'{self._service_url}/cluster/{cluster_name}'
 
-        response = requests.get(url=cluster_url,
-                                headers={"Authorization": f'{self._client.api_token}'})
+        client = S3MRequest()
+        response = client.get(url=cluster_url,
+                              headers={"Authorization": f'{self._client.api_token}'})
         if response:
             cluster_response = response.json()
             self._cluster_info = json.dumps(cluster_response["cluster"], indent=4)
@@ -131,8 +135,9 @@ class StreamingService:
     def get_cluster_deployment(self, cluster_name : str) -> Union[StreamingServiceDeployment, None]:
         cluster_url = f'{self._service_url}/cluster/{cluster_name}'
 
-        response = requests.get(url=cluster_url,
-                                headers={"Authorization": f'{self._client.api_token}'})
+        client = S3MRequest()
+        response = client.get(url=cluster_url,
+                              headers={"Authorization": f'{self._client.api_token}'})
         if response:
             cluster_response = response.json()
             if "cluster" not in cluster_response:
@@ -184,8 +189,9 @@ class StreamingService:
     def stop_cluster(self, cluster_name : str) -> Tuple[bool, str]:
         cluster_url = f'{self._service_url}/cluster/{cluster_name}'
 
-        response = requests.delete(url=cluster_url,
-                                   headers={"Authorization": f'{self._client.api_token}'})
+        client = S3MRequest()
+        response = client.delete(url=cluster_url,
+                                 headers={"Authorization": f'{self._client.api_token}'})
         if response:
             shutdown_details = json.dumps(response.json(), indent=4)
             shutdown_info = f'INFO: {self._service_name} Cluster Shutdown\n{shutdown_details}'
@@ -196,8 +202,9 @@ class StreamingService:
     def list_clusters(self) -> Tuple[bool, str]:
         list_url = f'{self._service_url}/list_clusters'
 
-        response = requests.get(url=list_url,
-                                headers={"Authorization": f'{self._client.api_token}'})
+        client = S3MRequest()
+        response = client.get(url=list_url,
+                              headers={"Authorization": f'{self._client.api_token}'})
         if response:
             cluster_list = response.json()
             clusters = json.dumps(cluster_list["clusters"], indent=4)
