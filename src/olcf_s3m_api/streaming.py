@@ -1,5 +1,4 @@
 import json
-import requests
 import time
 
 from dataclasses import dataclass
