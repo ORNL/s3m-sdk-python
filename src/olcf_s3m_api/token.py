@@ -4,7 +4,7 @@ import requests
 from typing import Tuple
 
 from .request import S3MRequest
-from .error import AuthenticationError
+from .error import S3MError
 from .client import OLCFAPIClient
 
 class TokenService:
@@ -28,7 +28,7 @@ class TokenService:
             #print(f'DEBUG: Token {self._client.api_token}\n{self._token_info}')
             return True, self._token_info
         else:
-            raise AuthenticationError(f'GET from {token_url} failed - {response.status_code}')
+            raise S3MError(f'GET from {token_url} failed - {response.status_code}')
 
     def revoke_token(self) -> Tuple[bool, str]:
         revoke_url = f'{self._service_url}/ctls/revoke'
@@ -39,4 +39,4 @@ class TokenService:
         if response:
             return True, None
         else:
-            raise AuthenticationError(f'DELETE {revoke_url} failed - {response.status_code}')
+            raise S3MError(f'DELETE {revoke_url} failed - {response.status_code}')

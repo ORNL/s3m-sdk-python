@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Dict, List, Tuple, Union
 
 from .request import S3MRequest
-from .error import S3MError, AuthenticationError
+from .error import S3MError
 from .client import OLCFAPIClient
 
 @dataclass
@@ -39,7 +39,7 @@ class StreamingService:
             services = json.dumps(service_list["backends"], indent=4)
             return True, services
         else:
-            raise AuthenticationError(f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
+            raise S3MError(f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
     def start_cluster(self,
                       cluster_name : str,
@@ -116,7 +116,7 @@ class StreamingService:
 
             return True, provision_details
         else:
-            raise AuthenticationError(f'POST to {provision_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
+            raise S3MError(f'POST to {provision_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
     def get_cluster_info(self, cluster_name : str) -> Tuple[bool, str]:
         cluster_url = f'{self._service_url}/cluster/{cluster_name}'
@@ -130,7 +130,7 @@ class StreamingService:
             self._cluster_name = cluster_name
             return True, self._cluster_info
         else:
-            raise AuthenticationError(f'GET from {cluster_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
+            raise S3MError(f'GET from {cluster_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
     def get_cluster_deployment(self, cluster_name : str) -> Union[StreamingServiceDeployment, None]:
         cluster_url = f'{self._service_url}/cluster/{cluster_name}'
@@ -184,7 +184,7 @@ class StreamingService:
 
             return self._deployment
         else:
-            raise AuthenticationError(f'GET from {cluster_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
+            raise S3MError(f'GET from {cluster_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
     def stop_cluster(self, cluster_name : str) -> Tuple[bool, str]:
         cluster_url = f'{self._service_url}/cluster/{cluster_name}'
@@ -197,7 +197,7 @@ class StreamingService:
             shutdown_info = f'INFO: {self._service_name} Cluster Shutdown\n{shutdown_details}'
             return True, shutdown_info
         else:
-            raise AuthenticationError(f'DELETE {cluster_url} failed - {response.reason} ({response.status_code})')
+            raise S3MError(f'DELETE {cluster_url} failed - {response.reason} ({response.status_code})')
 
     def list_clusters(self) -> Tuple[bool, str]:
         list_url = f'{self._service_url}/list_clusters'
@@ -210,4 +210,4 @@ class StreamingService:
             clusters = json.dumps(cluster_list["clusters"], indent=4)
             return True, clusters
         else:
-            raise AuthenticationError(f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
+            raise S3MError(f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
