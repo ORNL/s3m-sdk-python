@@ -168,7 +168,7 @@ class ComputeService:
     def get_job_status(self, jobid : str) -> Tuple[bool, str]:
         job_url = f'{self._service_url}/job/{jobid}'
 
-        client = S3MRequst()
+        client = S3MRequest()
         response = client.get(url=job_url,
                               headers={"Authorization": f'{self._client.api_token}'})
         if response:
