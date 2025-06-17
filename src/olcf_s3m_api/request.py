@@ -33,6 +33,8 @@ class S3MRequest:
 			raise S3MError("Connection error occurred for URL: {}".format(url))
 		except RequestException as e:
 			raise S3MError("RequestException: {} for URL: {}".format(str(e), url))
+		except S3MError:
+			raise
 		except Exception as e:
 			raise S3MError("Unexpected error: {} for URL: {}".format(str(e), url))
 
