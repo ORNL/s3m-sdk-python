@@ -3,7 +3,7 @@ import json
 from typing import List, Tuple
 
 from .request import S3MRequest
-from .error import S3MError
+from .error import S3MError, S3MJobIDError
 from .client import OLCFAPIClient
 
 class ComputeService:
@@ -159,6 +159,15 @@ class ComputeService:
                               headers={"Authorization": f'{self._client.api_token}'})
         if response:
             job_response = response.json()
+
+            # Check if any warnings or errors occurred
+            if (len(job_response["warnings"]) > 0):
+                raise S3MJobIDError(job_response["warnings"]);
+
+            if (len(job_response["errors"]) > 0):
+                raise S3MJobIDError(job_response["errors"]);
+
+            # Process normally
             job_info = job_response["jobs"][0]
             info = json.dumps(job_info, indent=4)
             return True, info
@@ -173,6 +182,15 @@ class ComputeService:
                               headers={"Authorization": f'{self._client.api_token}'})
         if response:
             job_response = response.json()
+
+            # Check if any warnings or errors occurred
+            if (len(job_response["warnings"]) > 0):
+                raise S3MJobIDError(job_response["warnings"]);
+
+            if (len(job_response["errors"]) > 0):
+                raise S3MJobIDError(job_response["errors"]);
+
+            # Process normally
             job_info = job_response["jobs"][0]
             status = json.dumps(job_info["state"]["current"])
             return True, status

@@ -9,7 +9,6 @@ logging.basicConfig(
 )
 
 # Generic error case
-
 class S3MError(Exception):
 	def __init__(self, message = "S3M Error"):
 		self.message = message
@@ -18,5 +17,10 @@ class S3MError(Exception):
 
 # Authentication
 class AuthenticationError(S3MError):
+	def __init__(self, message = ""):
+		super().__init__(message)
+
+# Job Errors
+class S3MJobIDError(S3MError):
 	def __init__(self, message = ""):
 		super().__init__(message)
