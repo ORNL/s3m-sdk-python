@@ -1,8 +1,9 @@
 import json
-import requests
 
 from typing import List, Tuple
 
+from .request import S3MRequest
+from .error import S3MError, S3MJobIDError
 from .client import OLCFAPIClient
 
 class ComputeService:
@@ -15,22 +16,22 @@ class ComputeService:
     def get_system_status(self) -> Tuple[bool, str]:
         status_url = f'{self._client.base_url}/olcf/v1alpha/status/{self._cluster_name}'
 
-        response = requests.get(url=status_url)
+        client = S3MRequest()
+        response = client.get(url=status_url)
         if response:
             status_response = response.json()
             #print(f'DEBUG: {self._cluster_name} status - {json.dumps(status_response, indent=4)}')
             status = json.dumps(status_response, indent=4)
             return True, status
         else:
-            error = f'GET from {status_url} failed - {response.reason} ({response.status_code})'
-            print(f'ERROR: {error}')
-            return False, error
+            raise S3MError(f'GET from {status_url} failed - {response.reason} ({response.status_code})')
 
     def get_queue_status(self, queue_name : str) -> Tuple[bool, str]:
         status_url = f'{self._service_url}/partitions'
 
-        response = requests.get(url=status_url,
-                                headers={"Authorization": f'{self._client.api_token}'})
+        client = S3MRequest()
+        response = client.get(url=status_url,
+                              headers={"Authorization": f'{self._client.api_token}'})
         if response:
             qstatus = "UNKNOWN"
             list_response = response.json()
@@ -45,15 +46,14 @@ class ComputeService:
 
             return True, qstatus
         else:
-            error = f'GET from {status_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
-            print(f'ERROR: {error}')
-            return False, error
+            raise S3MError(f'GET from {status_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
     def list_jobs(self) -> Tuple[bool, str]:
         list_url = f'{self._service_url}/jobs'
 
-        response = requests.get(url=list_url,
-                                headers={"Authorization": f'{self._client.api_token}'})
+        client = S3MRequest()
+        response = client.get(url=list_url,
+                              headers={"Authorization": f'{self._client.api_token}'})
         if response:
             list_response = response.json()
             job_list = list_response["jobs"]
@@ -61,15 +61,14 @@ class ComputeService:
             print(f'DEBUG: Slurm Jobs on {self._cluster_name} - {jobs}')
             return True, jobs
         else:
-            error = f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
-            print(f'ERROR: {error}')
-            return False, error
+            raise S3MError(f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
     def list_queues(self) -> Tuple[bool, str]:
         list_url = f'{self._service_url}/partitions'
 
-        response = requests.get(url=list_url,
-                                headers={"Authorization": f'{self._client.api_token}'})
+        client = S3MRequest()
+        response = client.get(url=list_url,
+                              headers={"Authorization": f'{self._client.api_token}'})
         if response:
             list_response = response.json()
             partitions = list_response["partitions"]
@@ -80,9 +79,7 @@ class ComputeService:
             print(f'DEBUG: Slurm Queues on {self._cluster_name} - {names}')
             return True, names
         else:
-            error = f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
-            print(f'ERROR: {error}')
-            return False, error
+            raise S3MError(f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
     def submit_job(self,
                    project : str,
@@ -131,8 +128,9 @@ class ComputeService:
         #print(f'DEBUG: POST\n{submit_request_str}\n')
         submit_request = submit_request_str.encode()
 
-        response = requests.post(url=submit_url, data=submit_request,
-                                 headers={"Authorization": f'{self._client.api_token}', "Content-Type": "application/json"})
+        client = S3MRequest()
+        response = client.post(url=submit_url, data=submit_request,
+                               headers={"Authorization": f'{self._client.api_token}', "Content-Type": "application/json"})
         if response:
             submit_response = response.json()
             #submit_details = json.dumps(submit_response)
@@ -140,48 +138,61 @@ class ComputeService:
             jobid = json.dumps(submit_response["job_id"])
             return True, jobid
         else:
-            error = f'POST to {submit_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
-            print(f'ERROR: {error}')
-            return False, error
+            raise S3MError(f'POST to {submit_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
     def cancel_job(self, jobid : str) -> Tuple[bool, str]:
         job_url = f'{self._service_url}/job/{jobid}'
 
-        response = requests.delete(url=job_url,
-                                   headers={"Authorization": f'{self._client.api_token}'})
+        client = S3MRequest()
+        response = client.delete(url=job_url,
+                                 headers={"Authorization": f'{self._client.api_token}'})
         if response:
             return True, ""
         else:
-            error = f'DELETE {job_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
-            print(f'ERROR: {error}')
-            return False, error
+            raise S3MError(f'DELETE {job_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
     def get_job_info(self, jobid : str) -> Tuple[bool, str]:
         job_url = f'{self._service_url}/job/{jobid}'
 
-        response = requests.get(url=job_url,
-                                headers={"Authorization": f'{self._client.api_token}'})
+        client = S3MRequest()
+        response = client.get(url=job_url,
+                              headers={"Authorization": f'{self._client.api_token}'})
         if response:
             job_response = response.json()
+
+            # Check if any warnings or errors occurred
+            if (len(job_response["warnings"]) > 0):
+                raise S3MJobIDError(job_response["warnings"], jobid)
+
+            if (len(job_response["errors"]) > 0):
+                raise S3MJobIDError(job_response["errors"], jobid)
+
+            # Process normally
             job_info = job_response["jobs"][0]
             info = json.dumps(job_info, indent=4)
             return True, info
         else:
-            error = f'GET from {job_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
-            print(f'ERROR: {error}')
-            return False, error
+            raise S3MError(f'GET from {job_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
     def get_job_status(self, jobid : str) -> Tuple[bool, str]:
         job_url = f'{self._service_url}/job/{jobid}'
 
-        response = requests.get(url=job_url,
-                                headers={"Authorization": f'{self._client.api_token}'})
+        client = S3MRequest()
+        response = client.get(url=job_url,
+                              headers={"Authorization": f'{self._client.api_token}'})
         if response:
             job_response = response.json()
+
+            # Check if any warnings or errors occurred
+            if (len(job_response["warnings"]) > 0):
+                raise S3MJobIDError(job_response["warnings"], jobid)
+
+            if (len(job_response["errors"]) > 0):
+                raise S3MJobIDError(job_response["errors"], jobid)
+
+            # Process normally
             job_info = job_response["jobs"][0]
             status = json.dumps(job_info["state"]["current"])
             return True, status
         else:
-            error = f'GET from {job_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
-            print(f'ERROR: {error}')
-            return False, error
+            raise S3MError(f'GET from {job_url} failed - {response.reason} ({response.status_code}) - {response.json()}')

@@ -1,10 +1,11 @@
 import json
-import requests
 import time
 
 from dataclasses import dataclass
 from typing import Dict, List, Tuple, Union
 
+from .request import S3MRequest
+from .error import S3MError
 from .client import OLCFAPIClient
 
 @dataclass
@@ -29,16 +30,15 @@ class StreamingService:
     def list_services(self) -> Tuple[bool, str]:
         list_url = f'{self._client.base_url}/olcf/v1alpha/streaming/list_backends'
 
-        response = requests.get(url=list_url,
-                                headers={"Authorization": f'{self._client.api_token}'})
+        client = S3MRequest()
+        response = client.get(url=list_url,
+                              headers={"Authorization": f'{self._client.api_token}'})
         if response:
             service_list = response.json()
             services = json.dumps(service_list["backends"], indent=4)
             return True, services
         else:
-            error = f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
-            print(f'ERROR: {error}')
-            return False, error
+            raise S3MError(f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
     def start_cluster(self,
                       cluster_name : str,
@@ -85,8 +85,9 @@ class StreamingService:
         #print(f'DEBUG: POST\n{provision_request_str}\n')
         provision_request = provision_request_str_no_nodes.encode() if node_count <= 1 else provision_request_str.encode()
 
-        response = requests.post(url=provision_url, data=provision_request,
-                                 headers={"Authorization": f'{self._client.api_token}', "Content-Type": "application/json"})
+        client = S3MRequest()
+        response = client.post(url=provision_url, data=provision_request,
+                               headers={"Authorization": f'{self._client.api_token}', "Content-Type": "application/json"})
         #print(f'DEBUG: response\n{response.json()}\n')
         if response:
             provision_details = json.dumps(response.json(), indent=4)
@@ -114,36 +115,32 @@ class StreamingService:
 
             return True, provision_details
         else:
-            error = f'POST to {provision_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
-            print(f'ERROR: {error}')
-            return False, error
+            raise S3MError(f'POST to {provision_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
     def get_cluster_info(self, cluster_name : str) -> Tuple[bool, str]:
         cluster_url = f'{self._service_url}/cluster/{cluster_name}'
 
-        response = requests.get(url=cluster_url,
-                                headers={"Authorization": f'{self._client.api_token}'})
+        client = S3MRequest()
+        response = client.get(url=cluster_url,
+                              headers={"Authorization": f'{self._client.api_token}'})
         if response:
             cluster_response = response.json()
             self._cluster_info = json.dumps(cluster_response["cluster"], indent=4)
             self._cluster_name = cluster_name
             return True, self._cluster_info
         else:
-            error = f'GET from {cluster_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
-            print(f'ERROR: {error}')
-            return False, error
+            raise S3MError(f'GET from {cluster_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
     def get_cluster_deployment(self, cluster_name : str) -> Union[StreamingServiceDeployment, None]:
         cluster_url = f'{self._service_url}/cluster/{cluster_name}'
 
-        response = requests.get(url=cluster_url,
-                                headers={"Authorization": f'{self._client.api_token}'})
+        client = S3MRequest()
+        response = client.get(url=cluster_url,
+                              headers={"Authorization": f'{self._client.api_token}'})
         if response:
             cluster_response = response.json()
             if "cluster" not in cluster_response:
-                error = f'Failed to extract cluster information using key "cluster" from response: {cluster_response}'
-                print(f'ERROR: {error}')
-                return None
+                raise S3MError(f'Failed to extract cluster information using key "cluster" from response: {cluster_response}')
 
             self._cluster_info = json.dumps(cluster_response["cluster"], indent=4)
 
@@ -186,34 +183,30 @@ class StreamingService:
 
             return self._deployment
         else:
-            error = f'GET from {cluster_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
-            print(f'ERROR: {error}')
-            return None
+            raise S3MError(f'GET from {cluster_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
     def stop_cluster(self, cluster_name : str) -> Tuple[bool, str]:
         cluster_url = f'{self._service_url}/cluster/{cluster_name}'
 
-        response = requests.delete(url=cluster_url,
-                                   headers={"Authorization": f'{self._client.api_token}'})
+        client = S3MRequest()
+        response = client.delete(url=cluster_url,
+                                 headers={"Authorization": f'{self._client.api_token}'})
         if response:
             shutdown_details = json.dumps(response.json(), indent=4)
             shutdown_info = f'INFO: {self._service_name} Cluster Shutdown\n{shutdown_details}'
             return True, shutdown_info
         else:
-            error = f'DELETE {cluster_url} failed - {response.reason} ({response.status_code})'
-            print(f'ERROR: {error}')
-            return False, error
+            raise S3MError(f'DELETE {cluster_url} failed - {response.reason} ({response.status_code})')
 
     def list_clusters(self) -> Tuple[bool, str]:
         list_url = f'{self._service_url}/list_clusters'
 
-        response = requests.get(url=list_url,
-                                headers={"Authorization": f'{self._client.api_token}'})
+        client = S3MRequest()
+        response = client.get(url=list_url,
+                              headers={"Authorization": f'{self._client.api_token}'})
         if response:
             cluster_list = response.json()
             clusters = json.dumps(cluster_list["clusters"], indent=4)
             return True, clusters
         else:
-            error = f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}'
-            print(f'ERROR: {error}')
-            return False, error
+            raise S3MError(f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
