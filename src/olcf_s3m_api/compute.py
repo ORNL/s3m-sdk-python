@@ -162,10 +162,10 @@ class ComputeService:
 
             # Check if any warnings or errors occurred
             if (len(job_response["warnings"]) > 0):
-                raise S3MJobIDError(job_response["warnings"])
+                raise S3MJobIDError(job_response["warnings"], jobid)
 
             if (len(job_response["errors"]) > 0):
-                raise S3MJobIDError(job_response["errors"])
+                raise S3MJobIDError(job_response["errors"], jobid)
 
             # Process normally
             job_info = job_response["jobs"][0]
@@ -185,10 +185,10 @@ class ComputeService:
 
             # Check if any warnings or errors occurred
             if (len(job_response["warnings"]) > 0):
-                raise S3MJobIDError(job_response["warnings"])
+                raise S3MJobIDError(job_response["warnings"], jobid)
 
             if (len(job_response["errors"]) > 0):
-                raise S3MJobIDError(job_response["errors"])
+                raise S3MJobIDError(job_response["errors"], jobid)
 
             # Process normally
             job_info = job_response["jobs"][0]

@@ -22,5 +22,5 @@ class AuthenticationError(S3MError):
 
 # Job Errors
 class S3MJobIDError(S3MError):
-	def __init__(self, message = ""):
-		super().__init__(message)
+	def __init__(self, message = "", jobid = "-1"):
+		super().__init__(f"Job ID: {jobid}. {message}")
