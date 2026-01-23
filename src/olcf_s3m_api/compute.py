@@ -5,6 +5,7 @@ from typing import List, Tuple
 from .request import S3MRequest
 from .error import S3MError, S3MJobIDError
 from .client import OLCFAPIClient
+from .status import StatusService
 
 class ComputeService:
     def __init__(self, cluster_name : str, api_client : OLCFAPIClient):
@@ -13,15 +14,16 @@ class ComputeService:
         self._service_url = f'{api_client.base_url}/slurm/v0.0.42/{cluster_name}'
 
     def get_system_status(self) -> Tuple[bool, dict]:
-        status_url = f'{self._client.base_url}/olcf/v1alpha/status/{self._cluster_name}'
-
-        client = S3MRequest()
-        response = client.get(url=status_url)
-        if response:
-            status_response = response.json()
-            return True, status_response
-        else:
-            raise S3MError(f'GET from {status_url} failed - {response.reason} ({response.status_code})')
+        my_status_service = StatusService()
+        msg = my_status_service.get_system_status(self._cluster_name)
+        
+        return True, msg
+    
+    def get_all_systems_status(self) -> Tuple[bool, dict]:
+        my_status_service = StatusService()
+        msg = my_status_service.get_all_systems_status()['resources']
+        
+        return True, msg
 
     def get_queue_status(self, queue_name : str) -> Tuple[bool, dict]:
         status_url = f'{self._service_url}/partitions'
