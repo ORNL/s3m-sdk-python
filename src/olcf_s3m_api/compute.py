@@ -19,7 +19,7 @@ class ComputeService:
         
         return True, msg
     
-    def get_all_systems_status(self) -> Tuple[bool, dict]:
+    def get_all_systems_status(self) -> Tuple[bool, list]:
         my_status_service = StatusService()
         msg = my_status_service.get_all_systems_status()['resources']
         
