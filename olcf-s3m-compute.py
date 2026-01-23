@@ -39,6 +39,7 @@ def submit(service : ComputeService,
     if jobfile.exists() and jobfile.is_file():
         jobname = jobfile.stem
         jobscript = jobfile.read_text()
+
     jobenv = ["EXAMPLE_VARIABLE_1=test1", "EXAMPLE_VARIABLE_2=/some/interesting/path"]
     success, msg = service.submit_job(project=project,
                                       workdir=workdir,

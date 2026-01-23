@@ -93,7 +93,7 @@ class ComputeService:
                    env_vars : List[str] = None) -> Tuple[bool, str]:
 
         submit_url = f'{self._service_url}/job/submit'
-
+        
         ev_json_list = "[]"
         if env_vars:
             ev_json_list = json.dumps(env_vars)
@@ -132,10 +132,11 @@ class ComputeService:
         client = S3MRequest()
         response = client.post(url=submit_url, data=submit_request,
                                headers={"Authorization": f'{self._client.api_token}', "Content-Type": "application/json"})
+
         if response:
             submit_response = response.json()
             jobid = json.dumps(submit_response["job_id"])
-            
+
             return True, jobid
         else:
             raise S3MError(f'POST to {submit_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
