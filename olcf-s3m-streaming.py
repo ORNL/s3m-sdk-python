@@ -49,8 +49,6 @@ def shutdown(service : StreamingService, cluster : str):
 
 
 def main(args):
-    #print("DEBUG: Arguments\n", args)
-
     my_strm_service_name = args.service
     my_cluster_name = args.cluster
     my_api_client = OLCFAPIClient(api_token=getenv("olcf_s3m_api_TOKEN", "InvalidToken"))

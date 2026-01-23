@@ -62,6 +62,7 @@ def cancel(service : ComputeService, job_id : str):
 def job_info(service : ComputeService, job_id : str):
     print('++++ OLCF S3M - Compute Job Orchestration ++++ Getting Job Information')
     success, msg = service.get_job_info(jobid=job_id)
+
     if success:
         print(msg)
     print('\n\n')
@@ -79,10 +80,7 @@ def status(service : ComputeService, queue : str=None):
         print(msg)
     print('\n\n')
 
-
 def main(args):
-    #print("DEBUG: Arguments\n", args)
-
     my_system_name = args.system
     my_queue = args.queue
     my_job = args.job

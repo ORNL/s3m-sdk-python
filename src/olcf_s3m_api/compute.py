@@ -119,7 +119,7 @@ class ComputeService:
                                                  env=ev_json_list,
                                                  nodes=str(node_count),
                                                  walltime=str(time_seconds))
-        #print(f'DEBUG: POST\n{submit_request_str}\n')
+
         submit_request = submit_request_str.encode()
 
         client = S3MRequest()
@@ -127,9 +127,8 @@ class ComputeService:
                                headers={"Authorization": f'{self._client.api_token}', "Content-Type": "application/json"})
         if response:
             submit_response = response.json()
-            #submit_details = json.dumps(submit_response)
-            #print(f'DEBUG: submit response\n{submit_details}')
             jobid = json.dumps(submit_response["job_id"])
+            
             return True, jobid
         else:
             raise S3MError(f'POST to {submit_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
@@ -164,6 +163,7 @@ class ComputeService:
             # Process normally
             job_info = job_response["jobs"][0]
             info = json.dumps(job_info, indent=4)
+
             return True, info
         else:
             raise S3MError(f'GET from {job_url} failed - {response.reason} ({response.status_code}) - {response.json()}')

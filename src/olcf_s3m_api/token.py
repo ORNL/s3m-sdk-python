@@ -24,7 +24,6 @@ class TokenService:
         if response:
             token_response = response.json()
             self._token_info = json.dumps(token_response["token"], indent=4)
-            #print(f'DEBUG: Token {self._client.api_token}\n{self._token_info}')
             return True, self._token_info
         else:
             raise S3MError(f'GET from {token_url} failed - {response.status_code}')
