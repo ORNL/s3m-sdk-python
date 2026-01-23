@@ -57,7 +57,7 @@ class ComputeService:
         else:
             raise S3MError(f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
-    def list_queues(self) -> Tuple[bool, str]:
+    def list_queues(self) -> Tuple[bool, list]:
         list_url = f'{self._service_url}/partitions'
 
         client = S3MRequest()
@@ -66,11 +66,18 @@ class ComputeService:
         if response:
             list_response = response.json()
             partitions = list_response["partitions"]
-            names : str = ""
+        
+            names = []
+            debug_msg = f'DEBUG: Slurm Queues on {self._cluster_name} - '
             for part in partitions:
                 part_name = json.dumps(part["name"])
-                names += f'{part_name} '
-            print(f'DEBUG: Slurm Queues on {self._cluster_name} - {names}')
+                part_name = part_name.replace('"', '')
+                names.append(part_name)
+                debug_msg += f'"{part_name}" ' 
+            
+            debug_msg.rstrip() # trim off trailing space(s)
+            print(debug_msg)
+
             return True, names
         else:
             raise S3MError(f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
@@ -162,9 +169,8 @@ class ComputeService:
 
             # Process normally
             job_info = job_response["jobs"][0]
-            info = json.dumps(job_info, indent=4)
 
-            return True, info
+            return True, job_info
         else:
             raise S3MError(f'GET from {job_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
@@ -186,7 +192,7 @@ class ComputeService:
 
             # Process normally
             job_info = job_response["jobs"][0]
-            status = json.dumps(job_info["state"]["current"])
-            return True, status
+
+            return True, job_info['state']['current']
         else:
             raise S3MError(f'GET from {job_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
