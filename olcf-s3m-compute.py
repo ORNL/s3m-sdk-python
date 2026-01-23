@@ -62,13 +62,15 @@ def job_info(service : ComputeService, job_id : str):
         print(msg)
     print('\n\n')
 
-def status(service : ComputeService, queue : str = None):
+def status(service : ComputeService, queue : str=None):
     if queue:
         print('++++ OLCF S3M - Compute Job Orchestration ++++ Getting Compute Queue Status')
         success, msg = service.get_queue_status(queue)
+        msg = json.dumps(msg, indent=4)
     else:
         print('++++ OLCF S3M - Compute Job Orchestration ++++ Getting Compute System Status')
         success, msg = service.get_system_status()
+        msg = json.dumps(msg, indent=4)
     if success:
         print(msg)
     print('\n\n')

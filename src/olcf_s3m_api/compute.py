@@ -7,26 +7,23 @@ from .error import S3MError, S3MJobIDError
 from .client import OLCFAPIClient
 
 class ComputeService:
-
     def __init__(self, cluster_name : str, api_client : OLCFAPIClient):
         self._client = api_client
         self._cluster_name = cluster_name
         self._service_url = f'{api_client.base_url}/slurm/v0.0.42/{cluster_name}'
 
-    def get_system_status(self) -> Tuple[bool, str]:
+    def get_system_status(self) -> Tuple[bool, dict]:
         status_url = f'{self._client.base_url}/olcf/v1alpha/status/{self._cluster_name}'
 
         client = S3MRequest()
         response = client.get(url=status_url)
         if response:
             status_response = response.json()
-            #print(f'DEBUG: {self._cluster_name} status - {json.dumps(status_response, indent=4)}')
-            status = json.dumps(status_response, indent=4)
-            return True, status
+            return True, status_response
         else:
             raise S3MError(f'GET from {status_url} failed - {response.reason} ({response.status_code})')
 
-    def get_queue_status(self, queue_name : str) -> Tuple[bool, str]:
+    def get_queue_status(self, queue_name : str) -> Tuple[bool, dict]:
         status_url = f'{self._service_url}/partitions'
 
         client = S3MRequest()
@@ -38,10 +35,8 @@ class ComputeService:
             if "partitions" in list_response:
                 partitions = list_response["partitions"]
                 for part in partitions:
-                    #print(f'DEBUG: partition info - {json.dumps(part, indent=4)}')
                     if part["name"] == queue_name:
-                        #print(f'DEBUG: found {queue_name} partition')
-                        qstatus = json.dumps(part["partition"]["state"][0])
+                        qstatus = part["partition"]["state"][0]
                         break
 
             return True, qstatus
