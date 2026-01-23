@@ -43,7 +43,7 @@ class ComputeService:
         else:
             raise S3MError(f'GET from {status_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
-    def list_jobs(self) -> Tuple[bool, str]:
+    def list_jobs(self) -> Tuple[bool, dict]:
         list_url = f'{self._service_url}/jobs'
 
         client = S3MRequest()
@@ -52,9 +52,8 @@ class ComputeService:
         if response:
             list_response = response.json()
             job_list = list_response["jobs"]
-            jobs = json.dumps(job_list, indent=4)
-            print(f'DEBUG: Slurm Jobs on {self._cluster_name} - {jobs}')
-            return True, jobs
+
+            return True, job_list
         else:
             raise S3MError(f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 

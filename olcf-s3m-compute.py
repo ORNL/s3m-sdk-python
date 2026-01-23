@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import json
 
 from pathlib import Path
 from os import getenv
@@ -12,7 +13,10 @@ def list_jobs(service : ComputeService):
     print('++++ OLCF S3M - Compute Job Orchestration ++++ Listing Jobs')
     success, msg = service.list_jobs()
     if success:
-        print(msg)
+        for job in msg:
+            job = json.dumps(job, indent=4)
+            print(job)
+            print('\n')
     print('\n\n')
 
 def list_queues(service : ComputeService):
