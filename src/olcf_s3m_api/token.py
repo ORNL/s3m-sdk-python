@@ -6,8 +6,36 @@ from .request import S3MRequest
 from .error import S3MError
 from .client import OLCFAPIClient
 
-class TokenService:
+class TokenInfo:
+    def set_values(self, info):
+        self.username = info['username']
+        self.project = info['project']
+        self.permissions = info['permissions']
+        self.plannedExpiration = info['plannedExpiration']
+        self.securityEnclave = info['securityEnclave']
+        self.description = info['description']
+        self.oneTimeToken = info['oneTimeToken']
+        self.delayedStart = info['delayedStart']
+        self.delayDate = info['delayDate']
+        self.ownerName = info['ownerName']
+        self.grpcPermissions = info['grpcPermissions']
 
+    def msg(self):
+        msg = f'username: {self.username} \n'
+        msg +=  f'project: {self.project} \n'
+        msg +=  f'permissions: {self.permissions} \n'
+        msg +=  f'projeplannedExpirationct: {self.plannedExpiration} \n'
+        msg +=  f'securityEnclave: {self.securityEnclave} \n'
+        msg +=  f'description: {self.description} \n'
+        msg +=  f'oneTimeToken: {self.oneTimeToken} \n'
+        msg +=  f'delayedStart: {self.delayedStart} \n'
+        msg +=  f'delayDate: {self.delayDate} \n'
+        msg +=  f'ownerName: {self.ownerName} \n'
+        msg +=  f'grpcPermissions: {self.grpcPermissions}'
+
+        return msg
+
+class TokenService:
     def __init__(self, api_client : OLCFAPIClient):
         self._client = api_client
         self._service_url = f'{api_client.base_url}/olcf/v1/token'
@@ -23,8 +51,12 @@ class TokenService:
                               headers={"Authorization": f'{self._client.api_token}'})
         if response:
             token_response = response.json()
-            self._token_info = json.dumps(token_response["token"], indent=4)
-            return True, self._token_info
+            self._token_info = token_response["token"]
+
+            token_info = TokenInfo()
+            token_info.set_values(self._token_info)
+
+            return True, token_info
         else:
             raise S3MError(f'GET from {token_url} failed - {response.status_code}')
 
