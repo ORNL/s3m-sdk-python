@@ -76,8 +76,8 @@ def status(service : ComputeService, queue : str=None):
         msg = json.dumps(msg, indent=4)
     else:
         print('++++ OLCF S3M - Compute Job Orchestration ++++ Getting Compute System Status')
-        success, msg = service.get_system_status()
-        msg = json.dumps(msg, indent=4)
+        success, status = service.get_system_status()
+        msg = status.msg()
     if success:
         print(msg)
     print('\n\n')

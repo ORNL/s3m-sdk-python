@@ -15,15 +15,15 @@ class ComputeService:
 
     def get_system_status(self) -> Tuple[bool, dict]:
         my_status_service = StatusService()
-        msg = my_status_service.get_system_status(self._cluster_name)
-        
-        return True, msg
+        status = my_status_service.get_system_status(self._cluster_name)
+
+        return True, status
     
     def get_all_systems_status(self) -> Tuple[bool, list]:
         my_status_service = StatusService()
-        msg = my_status_service.get_all_systems_status()['resources']
+        systems_status = my_status_service.get_all_systems_status()
         
-        return True, msg
+        return True, systems_status
 
     def get_queue_status(self, queue_name : str) -> Tuple[bool, dict]:
         status_url = f'{self._service_url}/partitions'
