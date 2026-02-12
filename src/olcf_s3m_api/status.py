@@ -1,5 +1,32 @@
 import requests
 
+class Status:
+    def set_values(self, info):
+        self.name = info['name']
+        self.description = info['description']
+        self.systemType = info['systemType']
+        self.securityEnclave = info['securityEnclave']
+        self.organization = info['organization']
+        self.status = info['status']
+        self.annotations = info['annotations']
+        self.downtimeScheduleAvailable = info['downtimeScheduleAvailable']
+        self.upcomingDowntimes = info['upcomingDowntimes']
+        self.retrievedAt = info['retrievedAt']
+
+    def msg(self):
+        msg = f'name: {self.name} \n'
+        msg += f'description: {self.description} \n'
+        msg += f'systemType: {self.systemType} \n'
+        msg += f'securityEnclave: {self.securityEnclave} \n'
+        msg += f'organization: {self.organization} \n'
+        msg += f'status: {self.status} \n'
+        msg += f'annotations: {self.annotations} \n'
+        msg += f'downtimeScheduleAvailable: {self.downtimeScheduleAvailable} \n'
+        msg += f'upcomingDowntimes: {self.upcomingDowntimes} \n'
+        msg += f'retrievedAt: {self.retrievedAt}'
+
+        return msg
+
 class StatusService:
     def __init__(self):
         self.base_url = 'https://s3m.olcf.ornl.gov'
@@ -11,7 +38,11 @@ class StatusService:
         try:
             response = requests.get(status_url)
             response.raise_for_status()
-            return response.json()
+
+            status = Status()
+            status.set_values(response.json())
+
+            return status
         except requests.RequestException as e:
             raise RuntimeError(f'Failed to fetch status for {cluster_name}: {e}')
     
@@ -22,6 +53,14 @@ class StatusService:
         try:
             response = requests.get(status_url)
             response.raise_for_status()
-            return response.json()
+
+            systems = []
+            for system in response.json()['resources']:
+                status = Status()
+                status.set_values(system)
+
+                systems.append(status)
+
+            return systems
         except requests.RequestException as e:
             raise RuntimeError(f'Failed to fetch status for all systems.')
