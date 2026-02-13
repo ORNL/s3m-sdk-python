@@ -1,5 +1,20 @@
 import requests
 
+class MachineStatus:
+    def __init__(self):
+        self.status = 'UNSPECIFIED' # Initial valid state
+    @property
+    def status(self):
+        """Get the current machine status."""
+        return self._status
+    @status.setter
+    def status(self, value):
+        """Set the machine status with validation"""
+        allowed_status_values = ['UNSPECIFIED', 'OPERATIONAL', 'UNAVAILABLE']
+        if value not in allowed_status_values:
+            raise ValueError(f'Invalid machine status: {value}. Must be one of {allowed_status_values}')
+        self._status = value
+
 class Status:
     def set_values(self, info):
         self.name = info['name']
@@ -7,7 +22,11 @@ class Status:
         self.systemType = info['systemType']
         self.securityEnclave = info['securityEnclave']
         self.organization = info['organization']
-        self.status = info['status']
+        
+        ms = MachineStatus()
+        ms.status = info['status']
+        self.status = ms.status
+
         self.annotations = info['annotations']
         self.downtimeScheduleAvailable = info['downtimeScheduleAvailable']
         self.upcomingDowntimes = info['upcomingDowntimes']
