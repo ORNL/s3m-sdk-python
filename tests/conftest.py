@@ -1,6 +1,5 @@
 import pytest
 
-
 from olcf_s3m_api.client import OLCFAPIClient
 
 @pytest.fixture

@@ -5,28 +5,27 @@ from typing import List, Tuple
 from .request import S3MRequest
 from .error import S3MError, S3MJobIDError
 from .client import OLCFAPIClient
+from .status import StatusService
 
 class ComputeService:
-
     def __init__(self, cluster_name : str, api_client : OLCFAPIClient):
         self._client = api_client
         self._cluster_name = cluster_name
         self._service_url = f'{api_client.base_url}/slurm/v0.0.42/{cluster_name}'
 
-    def get_system_status(self) -> Tuple[bool, str]:
-        status_url = f'{self._client.base_url}/olcf/v1alpha/status/{self._cluster_name}'
+    def get_system_status(self) -> Tuple[bool, dict]:
+        my_status_service = StatusService()
+        status = my_status_service.get_system_status(self._cluster_name)
 
-        client = S3MRequest()
-        response = client.get(url=status_url)
-        if response:
-            status_response = response.json()
-            #print(f'DEBUG: {self._cluster_name} status - {json.dumps(status_response, indent=4)}')
-            status = json.dumps(status_response, indent=4)
-            return True, status
-        else:
-            raise S3MError(f'GET from {status_url} failed - {response.reason} ({response.status_code})')
+        return True, status
+    
+    def get_all_systems_status(self) -> Tuple[bool, list]:
+        my_status_service = StatusService()
+        systems_status = my_status_service.get_all_systems_status()
+        
+        return True, systems_status
 
-    def get_queue_status(self, queue_name : str) -> Tuple[bool, str]:
+    def get_queue_status(self, queue_name : str) -> Tuple[bool, dict]:
         status_url = f'{self._service_url}/partitions'
 
         client = S3MRequest()
@@ -38,17 +37,15 @@ class ComputeService:
             if "partitions" in list_response:
                 partitions = list_response["partitions"]
                 for part in partitions:
-                    #print(f'DEBUG: partition info - {json.dumps(part, indent=4)}')
                     if part["name"] == queue_name:
-                        #print(f'DEBUG: found {queue_name} partition')
-                        qstatus = json.dumps(part["partition"]["state"][0])
+                        qstatus = part["partition"]["state"][0]
                         break
 
             return True, qstatus
         else:
             raise S3MError(f'GET from {status_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
-    def list_jobs(self) -> Tuple[bool, str]:
+    def list_jobs(self) -> Tuple[bool, dict]:
         list_url = f'{self._service_url}/jobs'
 
         client = S3MRequest()
@@ -57,13 +54,12 @@ class ComputeService:
         if response:
             list_response = response.json()
             job_list = list_response["jobs"]
-            jobs = json.dumps(job_list, indent=4)
-            print(f'DEBUG: Slurm Jobs on {self._cluster_name} - {jobs}')
-            return True, jobs
+
+            return True, job_list
         else:
             raise S3MError(f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
-    def list_queues(self) -> Tuple[bool, str]:
+    def list_queues(self) -> Tuple[bool, list]:
         list_url = f'{self._service_url}/partitions'
 
         client = S3MRequest()
@@ -72,11 +68,18 @@ class ComputeService:
         if response:
             list_response = response.json()
             partitions = list_response["partitions"]
-            names : str = ""
+        
+            names = []
+            debug_msg = f'DEBUG: Slurm Queues on {self._cluster_name} - '
             for part in partitions:
                 part_name = json.dumps(part["name"])
-                names += f'{part_name} '
-            print(f'DEBUG: Slurm Queues on {self._cluster_name} - {names}')
+                part_name = part_name.replace('"', '')
+                names.append(part_name)
+                debug_msg += f'"{part_name}" ' 
+            
+            debug_msg.rstrip() # trim off trailing space(s)
+            print(debug_msg)
+
             return True, names
         else:
             raise S3MError(f'GET from {list_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
@@ -92,7 +95,7 @@ class ComputeService:
                    env_vars : List[str] = None) -> Tuple[bool, str]:
 
         submit_url = f'{self._service_url}/job/submit'
-
+        
         ev_json_list = "[]"
         if env_vars:
             ev_json_list = json.dumps(env_vars)
@@ -125,17 +128,17 @@ class ComputeService:
                                                  env=ev_json_list,
                                                  nodes=str(node_count),
                                                  walltime=str(time_seconds))
-        #print(f'DEBUG: POST\n{submit_request_str}\n')
+
         submit_request = submit_request_str.encode()
 
         client = S3MRequest()
         response = client.post(url=submit_url, data=submit_request,
                                headers={"Authorization": f'{self._client.api_token}', "Content-Type": "application/json"})
+
         if response:
             submit_response = response.json()
-            #submit_details = json.dumps(submit_response)
-            #print(f'DEBUG: submit response\n{submit_details}')
             jobid = json.dumps(submit_response["job_id"])
+
             return True, jobid
         else:
             raise S3MError(f'POST to {submit_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
@@ -169,8 +172,8 @@ class ComputeService:
 
             # Process normally
             job_info = job_response["jobs"][0]
-            info = json.dumps(job_info, indent=4)
-            return True, info
+
+            return True, job_info
         else:
             raise S3MError(f'GET from {job_url} failed - {response.reason} ({response.status_code}) - {response.json()}')
 
@@ -192,7 +195,7 @@ class ComputeService:
 
             # Process normally
             job_info = job_response["jobs"][0]
-            status = json.dumps(job_info["state"]["current"])
-            return True, status
+
+            return True, job_info['state']['current']
         else:
             raise S3MError(f'GET from {job_url} failed - {response.reason} ({response.status_code}) - {response.json()}')

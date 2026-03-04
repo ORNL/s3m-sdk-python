@@ -7,10 +7,11 @@ from os import getenv
 from olcf_s3m_api.client import OLCFAPIClient
 from olcf_s3m_api.token import TokenService
 
-
 def info(service : TokenService):
     print('++++ OLCF S3M - Token Management ++++ Querying Token Details')
-    success, msg = service.get_token_info()
+    success, token_info = service.get_token_info()
+    msg = token_info.msg()
+
     if success:
         print(msg)
     print('\n\n')
@@ -28,8 +29,6 @@ def show(service : TokenService):
 
 
 def main(args):
-    #print("DEBUG: Arguments\n", args)
-
     my_api_client = OLCFAPIClient(api_token=getenv("olcf_s3m_api_TOKEN", "InvalidToken"))
     my_token_service = TokenService(api_client=my_api_client)
     if args.info:

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import json
 
 from pathlib import Path
 from os import getenv
@@ -12,7 +13,10 @@ def list_jobs(service : ComputeService):
     print('++++ OLCF S3M - Compute Job Orchestration ++++ Listing Jobs')
     success, msg = service.list_jobs()
     if success:
-        print(msg)
+        for job in msg:
+            job = json.dumps(job, indent=4)
+            print(job)
+            print('\n')
     print('\n\n')
 
 def list_queues(service : ComputeService):
@@ -35,6 +39,7 @@ def submit(service : ComputeService,
     if jobfile.exists() and jobfile.is_file():
         jobname = jobfile.stem
         jobscript = jobfile.read_text()
+
     jobenv = ["EXAMPLE_VARIABLE_1=test1", "EXAMPLE_VARIABLE_2=/some/interesting/path"]
     success, msg = service.submit_job(project=project,
                                       workdir=workdir,
@@ -58,25 +63,26 @@ def cancel(service : ComputeService, job_id : str):
 def job_info(service : ComputeService, job_id : str):
     print('++++ OLCF S3M - Compute Job Orchestration ++++ Getting Job Information')
     success, msg = service.get_job_info(jobid=job_id)
+    msg = json.dumps(msg, indent=4)
+
     if success:
         print(msg)
     print('\n\n')
 
-def status(service : ComputeService, queue : str = None):
+def status(service : ComputeService, queue : str=None):
     if queue:
         print('++++ OLCF S3M - Compute Job Orchestration ++++ Getting Compute Queue Status')
         success, msg = service.get_queue_status(queue)
+        msg = json.dumps(msg, indent=4)
     else:
         print('++++ OLCF S3M - Compute Job Orchestration ++++ Getting Compute System Status')
-        success, msg = service.get_system_status()
+        success, status = service.get_system_status()
+        msg = status.msg()
     if success:
         print(msg)
     print('\n\n')
 
-
 def main(args):
-    #print("DEBUG: Arguments\n", args)
-
     my_system_name = args.system
     my_queue = args.queue
     my_job = args.job
